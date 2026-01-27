@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import HexBoard from "./components/HexBoard";
 
@@ -20,23 +20,61 @@ function App() {
   const isHost = gameState.hostId === myId;
   const isLobby = gameState.phase === "lobby";
 
+  // React.useEffect(() => {
+  //   socket.on("gameState", (stateFromServer) => {
+  //     console.log("Received game state from backend", stateFromServer);
+  //     setGameState(stateFromServer);
+  //   });
+
+  //   return () => {
+  //     socket.off("gameState");
+  //   };
+  // }, []);
+
+
+  // useEffect(() => {
+  //   // Persistent player ID
+  //   let savedId = localStorage.getItem("playerId");
+  //   if (!savedId) {
+  //     savedId = `player_${Math.floor(Math.random() * 100000)}`;
+  //     localStorage.setItem("playerId", savedId);
+  //   }
+  //   setPlayerId(savedId);
+
+  //   socket.emit("registerPlayer", savedId);
+
+  //   socket.on("gameState", (state) => {
+  //     setGameState(state);
+  //   });
+
+  //   return () => socket.off("gameState");
+  // }, []);
+
+  // 1️⃣ Persistent ID setup
   useEffect(() => {
-    // Persistent player ID
     let savedId = localStorage.getItem("playerId");
     if (!savedId) {
       savedId = `player_${Math.floor(Math.random() * 100000)}`;
       localStorage.setItem("playerId", savedId);
     }
     setPlayerId(savedId);
-
     socket.emit("registerPlayer", savedId);
-
-    socket.on("gameState", (state) => {
-      setGameState(state);
-    });
-
-    return () => socket.off("gameState");
   }, []);
+
+  // 2️⃣ Game state listener
+  useEffect(() => {
+    const handleGameState = (stateFromServer) => {
+      console.log("Received game state from backend", stateFromServer);
+      setGameState(stateFromServer);
+    };
+
+    socket.on("gameState", handleGameState);
+
+    return () => {
+      socket.off("gameState", handleGameState);
+    };
+  }, []);
+
 
   const isMyTurn = playerId === gameState.turn;
 
@@ -181,10 +219,33 @@ function App() {
         <div style={{ flex: 2, maxWidth: '60%' }}>
           <p>middle container</p>
           <div style={{ border: "4px solid red" }}>
+            {/* export default function HexBoard({ boardLayout, tiles, players, defaultPorts }) { */}
+            {/* <HexBoard
+              boardLayout={gameState.boardLayout || []}
+              tiles={gameState.tiles || []}
+              players={gameState.players || []}
+              defaultPorts={gameState.defaultPorts || []}
+              currentPlayerId={gameState.turn}
+              onPlaceHouse={(vertexKey) => socket.emit("placeHouse", vertexKey)}
+              onPlaceRoad={(edgeKey) => socket.emit("placeRoad", edgeKey)}
+              gameState={gameState}
+            /> */}
             <HexBoard
               boardLayout={gameState.boardLayout || []}
               tiles={gameState.tiles || []}
+              vertices={gameState.vertices || []}
+              edges={gameState.edges || []}
+              ports={gameState.ports || []}
+              players={gameState.players || {}}
+              currentPlayerId={gameState.turn}
+              // onPlaceHouse={(vertexKey) => socket.emit("placeHouse", { vertexKey })}
+              onPlaceHouse={(vertexKey) => {
+                console.log("Emitting placeHouse to backend:", vertexKey);
+                socket.emit("placeHouse", { vertexKey });
+              }}
+              onPlaceRoad={(edgeKey) => socket.emit("placeRoad", { edgeKey })}
             />
+
           </div>
         </div>
         <div style={{ flex: 2, maxWidth: '15%' }}>
@@ -203,6 +264,15 @@ function App() {
           <p>red -{'>'} 4 wood</p>
           <p>1 ore {'<'}- Bank</p>
           <p>action: built a city</p>
+          {/* <{gameState?.turn?.currentPlayerId && (
+            <p>{gameState.turn.currentPlayerId}</p>
+          )}> */}
+          <p>{gameState.turn}</p>
+          {/* {currentPlayer && (
+            <p style={{ color: currentPlayer.color }}>
+              Current Player Color: {currentPlayer.color}
+            </p>
+          )} */}
         </div>
       </div>
 
