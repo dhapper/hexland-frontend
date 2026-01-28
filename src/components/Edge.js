@@ -1,22 +1,34 @@
-// components/Edge.js
 import React from "react";
 
-export default function Edge({ v1, v2, placed, active, onClick }) {
+export default function Edge({ v1, v2, placed, active, playerColor, clickColor, onClick }) {
   if (placed) {
     return (
-      <line
-        x1={v1.x}
-        y1={v1.y}
-        x2={v2.x}
-        y2={v2.y}
-        stroke="#8B4513"
-        strokeWidth="6"
-        strokeLinecap="round"
-      />
+      <>
+        {/* black outline */}
+        <line
+          x1={v1.x}
+          y1={v1.y}
+          x2={v2.x}
+          y2={v2.y}
+          stroke="#000"           // black outline
+          strokeWidth="8"         // slightly thicker than main line
+          strokeLinecap="round"
+        />
+        {/* actual road color */}
+        <line
+          x1={v1.x}
+          y1={v1.y}
+          x2={v2.x}
+          y2={v2.y}
+          stroke={playerColor}    // player's color
+          strokeWidth="6"         // slightly thinner than outline
+          strokeLinecap="round"
+        />
+      </>
     );
   }
 
-  if (!active) return null; // only show eligible edges
+  if (!active) return null; // only show clickable edges
 
   // clickable placeholder (white dot at midpoint)
   const midX = (v1.x + v2.x) / 2;
@@ -26,8 +38,8 @@ export default function Edge({ v1, v2, placed, active, onClick }) {
     <circle
       cx={midX}
       cy={midY}
-      r={8}
-      fill="#fff"
+      r={12}
+      fill={clickColor}
       stroke="#000"
       strokeWidth={1}
       style={{ cursor: "pointer" }}

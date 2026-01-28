@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 import HexBoard from "./components/HexBoard";
+import { BuildTypes, Phase, TurnPhase } from "./utils/constants";
 
 
 const socket = io("http://localhost:4000");
@@ -10,7 +11,7 @@ function App() {
   const [gameState, setGameState] = useState({
     players: {},
     turn: null,
-    phase: "lobby",
+    phase: Phase.LOBBY,
     hostId: null
   });
 
@@ -18,37 +19,14 @@ function App() {
 
   const myId = playerId; // 👈 single source of truth
   const isHost = gameState.hostId === myId;
-  const isLobby = gameState.phase === "lobby";
+  const isLobby = gameState.phase === Phase.LOBBY;
 
-  // React.useEffect(() => {
-  //   socket.on("gameState", (stateFromServer) => {
-  //     console.log("Received game state from backend", stateFromServer);
-  //     setGameState(stateFromServer);
-  //   });
+  const [boardScale, setBoardScale] = useState(0.8); // default
 
-  //   return () => {
-  //     socket.off("gameState");
-  //   };
-  // }, []);
+  const [buildMode, setBuildMode] = useState(null); // "house", "road", etc.
 
+  const boardRef = useRef(null);
 
-  // useEffect(() => {
-  //   // Persistent player ID
-  //   let savedId = localStorage.getItem("playerId");
-  //   if (!savedId) {
-  //     savedId = `player_${Math.floor(Math.random() * 100000)}`;
-  //     localStorage.setItem("playerId", savedId);
-  //   }
-  //   setPlayerId(savedId);
-
-  //   socket.emit("registerPlayer", savedId);
-
-  //   socket.on("gameState", (state) => {
-  //     setGameState(state);
-  //   });
-
-  //   return () => socket.off("gameState");
-  // }, []);
 
   // 1️⃣ Persistent ID setup
   useEffect(() => {
@@ -75,11 +53,36 @@ function App() {
     };
   }, []);
 
+  // for wheel listener
+  useEffect(() => {
+    if (!boardRef.current) return;
+
+    const handleWheel = (e) => {
+      e.preventDefault(); // ✅ prevent page scroll
+      const delta = -e.deltaY * 0.001; // tweak sensitivity
+      setBoardScale((prev) => {
+        let next = prev + delta;
+        if (next < 0.5) next = 0.5; // min zoom
+        if (next > 1.5) next = 1.5; // max zoom
+        return next;
+      });
+    };
+
+    const boardEl = boardRef.current;
+    boardEl.addEventListener("wheel", handleWheel, { passive: false });
+
+    // Cleanup
+    return () => {
+      boardEl.removeEventListener("wheel", handleWheel);
+    };
+  }, [boardRef]);
+
+
 
   const isMyTurn = playerId === gameState.turn;
 
   return (
-    <div style={{ padding: 20, background: "#524f4f", height: "100vh" }}>
+    <div style={{ background: "#524f4f", height: "100vh" }}>
 
       {/* <p> hi </p>
       <p>{ gameState.boardLayout }</p>
@@ -92,7 +95,7 @@ function App() {
           <h1>Player Sync Test</h1>
           <p>
             <strong>Phase:</strong>{" "}
-            {gameState.phase === "lobby" ? "Lobby" : "In Game"}
+            {gameState.phase}
           </p>
           <p>
             <strong>Turn Phase:</strong>{" "}
@@ -152,14 +155,14 @@ function App() {
             </p>
           )}
 
-          {gameState.phase === "rollForTurnOrder" &&
+          {gameState.phase === Phase.ROLL_FOR_TURN_ORDER &&
             !(gameState.turnOrderRolls?.[playerId]) && (
-              <button onClick={() => socket.emit("rollForTurnOrder")}>
+              <button onClick={() => socket.emit(Phase.ROLL_FOR_TURN_ORDER)}>
                 Roll Dice for Turn Order
               </button>
             )}
 
-          {gameState.phase === "rollForTurnOrder" && gameState.turnOrderRolls && (
+          {gameState.phase === Phase.ROLL_FOR_TURN_ORDER && gameState.turnOrderRolls && (
             <div>
               <h3>Rolls for Turn Order:</h3>
               {Object.entries(gameState.turnOrderRolls).map(([id, roll]) => (
@@ -170,7 +173,7 @@ function App() {
             </div>
           )}
 
-          {gameState.phase === "rollForTurnOrder" && gameState.lastRolls && (
+          {gameState.phase === Phase.ROLL_FOR_TURN_ORDER && gameState.lastRolls && (
             <div>
               <h3>Live Dice Rolls:</h3>
               {Object.entries(gameState.lastRolls).map(([id, dice]) => (
@@ -193,6 +196,11 @@ function App() {
               Start Game
             </button>
           )}
+          {isLobby && isHost && (
+            <button onClick={() => socket.emit("rerollBoard")}>
+              Reroll Board
+            </button>
+          )}
           {isLobby === false && isHost && (
             <button onClick={() => socket.emit("exitToLobby")}>
               Exit to Lobby
@@ -200,36 +208,66 @@ function App() {
           )}
 
 
-          {isLobby === false && isMyTurn && gameState.turnPhase === "roll" && (
+          {isLobby === false && isMyTurn && gameState.turnPhase === TurnPhase.ROLL && (
             <button onClick={() => socket.emit("rollDice")}>Roll Dice</button>
           )}
 
-          {isMyTurn && gameState.turnPhase === "action" && (
+          {isMyTurn && gameState.turnPhase === TurnPhase.ACTION && (
             <>
-              <button onClick={() => socket.emit("buildRoad")}>Road</button>
-              <button onClick={() => socket.emit("buildHouse")}>House</button>
-              <button onClick={() => socket.emit("buildCity")}>City</button>
-              <button onClick={() => socket.emit("actionCard")}>Action Card</button>
-              <button onClick={() => socket.emit("trade")}>Trade</button>
-              <button onClick={() => socket.emit("endTurn")}>End Turn</button>
+              {isMyTurn && gameState.turnPhase === TurnPhase.ACTION && (
+                <>
+                  {/* <button onClick={() => setBuildMode("road")}>Road</button> */}
+                  <button
+                    style={{
+                      backgroundColor: buildMode === BuildTypes.ROAD ? "palegreen" : "",
+                      cursor: "pointer"
+                    }}
+                    onClick={() => {
+                      setBuildMode(buildMode == BuildTypes.ROAD ? null : BuildTypes.ROAD)
+                      console.log('build mode:', buildMode)
+                    }}>
+                    Road
+                  </button>
+                  <button
+                    style={{
+                      backgroundColor: buildMode === BuildTypes.HOUSE ? "palegreen" : "",
+                      cursor: "pointer"
+                    }}
+                    onClick={() => {
+                      setBuildMode(buildMode == BuildTypes.HOUSE ? null : BuildTypes.HOUSE)
+                      console.log('build mode:', buildMode)
+                    }}>
+                    House
+                  </button>
+                  <button onClick={() => setBuildMode("city")}>City</button>
+                  <button onClick={() => socket.emit("actionCard")}>Action Card</button>
+                  <button onClick={() => socket.emit("trade")}>Trade</button>
+                  <button onClick={() => {
+                    setBuildMode(null);
+                    socket.emit("endTurn")
+                  }}>End Turn</button>
+                </>
+              )}
+
             </>
           )}
 
         </div>
-        <div style={{ flex: 2, maxWidth: '60%' }}>
-          <p>middle container</p>
+        <div
+          ref={boardRef}
+          style={{ flex: 2, maxWidth: '60%', overflow: 'hidden' }}
+        // onWheel={(e) => {
+        //   e.preventDefault(); // prevent page from scrolling
+        //   const delta = -e.deltaY * 0.001; // tweak sensitivity
+        //   setBoardScale(prev => {
+        //     let next = prev + delta;
+        //     if (next < 0.5) next = 0.5; // min zoom
+        //     if (next > 1.5) next = 1.5; // max zoom
+        //     return next;
+        //   });
+        // }}
+        >
           <div style={{ border: "4px solid red" }}>
-            {/* export default function HexBoard({ boardLayout, tiles, players, defaultPorts }) { */}
-            {/* <HexBoard
-              boardLayout={gameState.boardLayout || []}
-              tiles={gameState.tiles || []}
-              players={gameState.players || []}
-              defaultPorts={gameState.defaultPorts || []}
-              currentPlayerId={gameState.turn}
-              onPlaceHouse={(vertexKey) => socket.emit("placeHouse", vertexKey)}
-              onPlaceRoad={(edgeKey) => socket.emit("placeRoad", edgeKey)}
-              gameState={gameState}
-            /> */}
             <HexBoard
               boardLayout={gameState.boardLayout || []}
               tiles={gameState.tiles || []}
@@ -238,12 +276,23 @@ function App() {
               ports={gameState.ports || []}
               players={gameState.players || {}}
               currentPlayerId={gameState.turn}
+              myPlayerId={playerId}
               // onPlaceHouse={(vertexKey) => socket.emit("placeHouse", { vertexKey })}
               onPlaceHouse={(vertexKey) => {
                 console.log("Emitting placeHouse to backend:", vertexKey);
                 socket.emit("placeHouse", { vertexKey });
+                setBuildMode(null);
               }}
-              onPlaceRoad={(edgeKey) => socket.emit("placeRoad", { edgeKey })}
+              // onPlaceRoad={(edgeKey) => socket.emit("placeRoad", { edgeKey })}
+              onPlaceRoad={(edgeKey) => {
+                console.log("Emitting placeRoad to backend:", edgeKey);
+                socket.emit("placeRoad", { edgeKey });
+                setBuildMode(null);
+              }}
+              scale={boardScale}
+              gameState={gameState}
+              socket={socket}
+              buildMode={buildMode}
             />
 
           </div>
@@ -264,15 +313,20 @@ function App() {
           <p>red -{'>'} 4 wood</p>
           <p>1 ore {'<'}- Bank</p>
           <p>action: built a city</p>
-          {/* <{gameState?.turn?.currentPlayerId && (
-            <p>{gameState.turn.currentPlayerId}</p>
-          )}> */}
           <p>{gameState.turn}</p>
-          {/* {currentPlayer && (
-            <p style={{ color: currentPlayer.color }}>
-              Current Player Color: {currentPlayer.color}
-            </p>
-          )} */}
+
+          <div>
+            <h3>Board Scale</h3>
+            <input
+              type="range"
+              min="0.5"
+              max="1.5"
+              step="0.01"
+              value={boardScale}
+              onChange={(e) => setBoardScale(parseFloat(e.target.value))}
+            />
+            <p>{Math.round(boardScale * 100)}%</p>
+          </div>
         </div>
       </div>
 
