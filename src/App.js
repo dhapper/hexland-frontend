@@ -4,7 +4,8 @@ import HexBoard from "./components/HexBoard";
 import { BuildTypes, Phase, TurnPhase } from "./utils/constants";
 
 
-const socket = io("http://localhost:4000");
+// const socket = io("http://localhost:4000");
+const socket = io("https://hexland-backend.onrender.com");
 
 
 function App() {
