@@ -17,6 +17,7 @@ export default function HexBoard({
   myPlayerId,
   onPlaceHouse,
   onPlaceRoad,
+  onPlaceCity,
   scale = 0.8,
   gameState,
   socket,
@@ -32,7 +33,7 @@ export default function HexBoard({
   const PADDING = size * 0.6;
 
   // ---------------- UI ----------------
-  const VERTEX_ACTIVE_SIZE = 15;
+  const VERTEX_ACTIVE_SIZE = 10;
   const VERTEX_INACTIVE_SIZE = 5;
   const EDGE_INACTIVE_SIZE = 0;
 
@@ -102,13 +103,13 @@ export default function HexBoard({
 
   // ---------------- CLICK HANDLERS ----------------
   const handleVertexClick = (vertex) => {
-    // Only allow placing houses for now
+    console.log(buildMode)
     if (buildMode === BuildTypes.HOUSE || gameState.phase === Phase.SETUP) {
       onPlaceHouse(makeKey(vertex.x, vertex.y));
+    } else if (buildMode === BuildTypes.CITY) {
+      onPlaceCity(makeKey(vertex.x, vertex.y));
     }
   };
-
-
 
   const handleRoadPlace = (edge) => {
     if (edge.placed) return;
@@ -285,7 +286,7 @@ export default function HexBoard({
           })}
 
           {/* Vertices */}
-          {vertices.map((v) => {
+          {/* {vertices.map((v) => {
             const isSetup = gameState.phase === Phase.SETUP;
             const isInGame = gameState.phase === Phase.IN_GAME;
             const isMyTurn = gameState.turn === myPlayerId;
@@ -295,26 +296,63 @@ export default function HexBoard({
             const validInGame = isInGame && isMyTurn && buildMode === BuildTypes.HOUSE;
             const showAvailableHouses = (validSetup || validInGame) && v.active;
 
-            const canClick = v.active && !v.hasHouse && (
+            // const showAvailableCities =
+            //   buildMode === BuildTypes.CITY &&
+            //   v.buildingType === BuildTypes.HOUSE &&
+            //   v.playerId === myPlayerId;
+
+            const showAvailableCities = (isInGame && isMyTurn && buildMode === BuildTypes.CITY) && v.buildingType === BuildTypes.HOUSE
+
+
+            const canClick = v.active && !v.buildingType && (
               validSetup || validInGame
             );
+
+            const validInGameCity = isInGame && isMyTurn && buildMode === BuildTypes.CITY;
+            const canClickCity = v.activeCity && v.buildingType === BuildTypes.HOUSE && validInGameCity;
 
             let fillColor;
             let size;
 
-            if (v.hasHouse) {
-              // Vertex already has a house → use owner color
+            // if (v.buildingType === BuildTypes.HOUSE) {
+            //   // Vertex already has a house → use owner color
+            //   fillColor = gameState.players[v.playerId]?.color || "black";
+            //   size = VERTEX_ACTIVE_SIZE;
+            // } else if (v.buildingType === BuildTypes.CITY) {
+            //   fillColor = "black";
+            //   size = VERTEX_ACTIVE_SIZE * 1.5;
+            // } else if (showAvailableHouses) {
+            //   // Empty but clickable
+            //   fillColor = "#fff";
+            //   size = VERTEX_ACTIVE_SIZE;
+            // } else {
+            //   // Empty and not clickable
+            //   fillColor = "#888";
+            //   size = VERTEX_INACTIVE_SIZE;
+            // }
+
+            if (v.buildingType === BuildTypes.CITY) {
+              // render city
+              fillColor = "green";
+              size = VERTEX_ACTIVE_SIZE * 1.5;
+            } else if (showAvailableCities) {
+              // render clickable upgrade to city
+              fillColor = "#fff"; // highlight
+              size = VERTEX_ACTIVE_SIZE;
+            } else if (v.buildingType === BuildTypes.HOUSE) {
+              // render house
               fillColor = gameState.players[v.playerId]?.color || "black";
               size = VERTEX_ACTIVE_SIZE;
             } else if (showAvailableHouses) {
-              // Empty but clickable
+              // render clickable for new house
               fillColor = "#fff";
               size = VERTEX_ACTIVE_SIZE;
             } else {
-              // Empty and not clickable
+              // inactive / unclickable
               fillColor = "#888";
               size = VERTEX_INACTIVE_SIZE;
             }
+
 
             return (
               <Vertex
@@ -325,11 +363,85 @@ export default function HexBoard({
                 fillColor={fillColor}
                 clickable={canClick}
                 onClick={() => {
-                  if (!canClick) return;
-                  handleVertexClick(v);
+                  if (canClick || canClickCity)
+                    handleVertexClick(v);
                 }}
               />
 
+            ); */}
+
+          {/* })} */}
+          {vertices.map((v) => {
+            const isSetup = gameState.phase === Phase.SETUP;
+            const isInGame = gameState.phase === Phase.IN_GAME;
+            const isMyTurn = gameState.turn === myPlayerId;
+            const vertexKey = makeKey(v.x, v.y);
+
+            // Can place a new house
+            const showAvailableHouses =
+              ((isSetup && isMyTurn && gameState.setupStep === BuildTypes.HOUSE) ||
+                (isInGame && isMyTurn && buildMode === BuildTypes.HOUSE)) &&
+              v.active &&
+              !v.buildingType;
+
+            // Can upgrade an existing house to a city
+            const showAvailableCities =
+              isInGame &&
+              isMyTurn &&
+              buildMode === BuildTypes.CITY &&
+              v.buildingType === BuildTypes.HOUSE &&
+              v.playerId === myPlayerId;
+
+            // Combine for clickable
+            const canClick = showAvailableHouses || showAvailableCities;
+
+            // Determine visual
+            let fillColor, size;
+            if (v.buildingType === BuildTypes.CITY) {
+              fillColor = gameState.players[v.playerId]?.color || "black";
+              size = VERTEX_ACTIVE_SIZE * 1.2;
+            } else if (showAvailableCities) {
+              fillColor = "#fff"; // highlight upgradeable
+              size = VERTEX_ACTIVE_SIZE;
+            } else if (v.buildingType === BuildTypes.HOUSE) {
+              fillColor = gameState.players[v.playerId]?.color || "black";
+              size = VERTEX_ACTIVE_SIZE;
+            } else if (showAvailableHouses) {
+              fillColor = "#fff"; // highlight available
+              size = VERTEX_ACTIVE_SIZE;
+            } else {
+              fillColor = "#888"; // inactive
+              size = VERTEX_INACTIVE_SIZE;
+            }
+
+            return (
+              <g key={vertexKey}>
+                <Vertex
+                  x={v.x}
+                  y={v.y}
+                  size={size}
+                  fillColor={fillColor}
+                  clickable={canClick}
+                  onClick={() => {
+                    if (!canClick) return;
+                    handleVertexClick(v);
+                  }}
+                />
+                {v.buildingType === BuildTypes.CITY && (
+                  
+                  <text
+                    x={v.x - 1}
+                    y={v.y + 7} // slightly lower to vertically center
+                    textAnchor="middle"
+                    fontSize={20}
+                    fontWeight="bold"
+                    fill="black"
+                    pointerEvents="none"
+                  >
+                    C
+                  </text>
+                )}
+              </g>
             );
 
           })}

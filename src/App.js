@@ -224,7 +224,6 @@ function App() {
                     }}
                     onClick={() => {
                       setBuildMode(buildMode == BuildTypes.ROAD ? null : BuildTypes.ROAD)
-                      console.log('build mode:', buildMode)
                     }}>
                     Road
                   </button>
@@ -235,11 +234,20 @@ function App() {
                     }}
                     onClick={() => {
                       setBuildMode(buildMode == BuildTypes.HOUSE ? null : BuildTypes.HOUSE)
-                      console.log('build mode:', buildMode)
                     }}>
                     House
                   </button>
-                  <button onClick={() => setBuildMode("city")}>City</button>
+                  <button
+                    style={{
+                      backgroundColor: buildMode === BuildTypes.CITY ? "palegreen" : "",
+                      cursor: "pointer"
+                    }}
+                    onClick={() => {
+                      setBuildMode(buildMode == BuildTypes.CITY ? null : BuildTypes.CITY)
+                    }}>
+                    City
+                  </button>
+                  {/* <button onClick={() => setBuildMode("city")}>City</button> */}
                   <button onClick={() => socket.emit("actionCard")}>Action Card</button>
                   <button onClick={() => socket.emit("trade")}>Trade</button>
                   <button onClick={() => {
@@ -287,6 +295,11 @@ function App() {
               onPlaceRoad={(edgeKey) => {
                 console.log("Emitting placeRoad to backend:", edgeKey);
                 socket.emit("placeRoad", { edgeKey });
+                setBuildMode(null);
+              }}
+              onPlaceCity={(vertexKey) => {
+                console.log("Emitting placeCity to backend:", vertexKey);
+                socket.emit("placeCity", { vertexKey });
                 setBuildMode(null);
               }}
               scale={boardScale}
