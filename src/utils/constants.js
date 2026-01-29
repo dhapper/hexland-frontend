@@ -17,3 +17,11 @@ export const TurnPhase = {
   ROLL: "roll",
   ACTION: "action"
 };
+
+export const Resource = {
+  WOOD: "wood",
+  ORE: "ore",
+  WHEAT: "wheat",
+  BRICK: "brick",
+  SHEEP: "sheep"
+};

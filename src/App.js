@@ -1,10 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
+import { BuildTypes, Phase, TurnPhase, Resource } from "./utils/constants";
 import HexBoard from "./components/HexBoard";
-import { BuildTypes, Phase, TurnPhase } from "./utils/constants";
+import GameInfo from "./ui/GameInfo";
+import PlayerInventory from "./ui/PlayerInventory";
 
+// const socket = io("http://localhost:4000");
+// const socket = io("https://hexland-backend.onrender.com");
+const socket = io(process.env.REACT_APP_BACKEND_URL);
 
-const socket = io("http://localhost:4000");
+console.log("Backend URL:", process.env.REACT_APP_BACKEND_URL);
+
 
 
 function App() {
@@ -20,6 +26,13 @@ function App() {
   const myId = playerId; // 👈 single source of truth
   const isHost = gameState.hostId === myId;
   const isLobby = gameState.phase === Phase.LOBBY;
+
+  const myResources = gameState.players?.[playerId]?.resources || {};
+  const myPorts = (gameState.ports || []).filter(port =>
+    port.owner.includes(playerId)
+  );
+
+
 
   const [boardScale, setBoardScale] = useState(0.8); // default
 
@@ -81,6 +94,7 @@ function App() {
 
   const isMyTurn = playerId === gameState.turn;
 
+
   return (
     <div style={{ background: "#524f4f", height: "100vh" }}>
 
@@ -93,6 +107,10 @@ function App() {
           <p>left container</p>
 
           <h1>Player Sync Test</h1>
+          <p>
+            <strong>Backend URL:</strong>{" "}
+            {process.env.REACT_APP_BACKEND_URL}
+          </p>
           <p>
             <strong>Phase:</strong>{" "}
             {gameState.phase}
@@ -256,24 +274,29 @@ function App() {
                   }}>End Turn</button>
                 </>
               )}
-
             </>
           )}
+
+          <GameInfo
+            turnOrder={gameState.turnOrder || []}
+            players={gameState.players || {}}
+            currentPlayerId={gameState.turn}
+            myPlayerId={playerId}
+            hostId={gameState.hostId}
+            lastRoll={gameState.lastRoll || {}}
+            bankResources={gameState.bankResources}
+          ></GameInfo>
+
+          <PlayerInventory
+            resources={myResources}
+            ports={myPorts}
+            myPlayerId={playerId}
+          ></PlayerInventory>
 
         </div>
         <div
           ref={boardRef}
           style={{ flex: 2, maxWidth: '60%', overflow: 'hidden' }}
-        // onWheel={(e) => {
-        //   e.preventDefault(); // prevent page from scrolling
-        //   const delta = -e.deltaY * 0.001; // tweak sensitivity
-        //   setBoardScale(prev => {
-        //     let next = prev + delta;
-        //     if (next < 0.5) next = 0.5; // min zoom
-        //     if (next > 1.5) next = 1.5; // max zoom
-        //     return next;
-        //   });
-        // }}
         >
           <div style={{ border: "4px solid red" }}>
             <HexBoard
