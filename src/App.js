@@ -4,6 +4,11 @@ import { BuildTypes, Phase, TurnPhase, Resource } from "./utils/constants";
 import HexBoard from "./components/HexBoard";
 import GameInfo from "./ui/GameInfo";
 import PlayerInventory from "./ui/PlayerInventory";
+import TradingInterface from "./ui/TradingInterface";
+import CurrentTrade from "./ui/CurrentTrade";
+import PlayerAction from "./ui/PlayerAction";
+import SetupPanel from "./ui/SetupPanel";
+import LobbyPanel from "./ui/LobbyPanel";
 
 // const socket = io("http://localhost:4000");
 // const socket = io("https://hexland-backend.onrender.com");
@@ -32,7 +37,7 @@ function App() {
     port.owner.includes(playerId)
   );
 
-
+  const [inTradingInterface, setInTradingInterface] = useState(false);
 
   const [boardScale, setBoardScale] = useState(0.8); // default
 
@@ -98,183 +103,42 @@ function App() {
   return (
     <div style={{ background: "#524f4f", height: "100vh" }}>
 
-      {/* <p> hi </p>
-      <p>{ gameState.boardLayout }</p>
-      <p>{ JSON.stringify(gameState.tiles) }</p> */}
-
       <div style={{ display: 'flex', height: '100vh' }}>
         <div style={{ flex: 1, maxWidth: '25%' }}>
-          <p>left container</p>
 
-          <h1>Player Sync Test</h1>
-          <p>
-            <strong>Backend URL:</strong>{" "}
-            {process.env.REACT_APP_BACKEND_URL}
-          </p>
-          <p>
-            <strong>Phase:</strong>{" "}
-            {gameState.phase}
-          </p>
-          <p>
-            <strong>Turn Phase:</strong>{" "}
-            {gameState.turnPhase}
-          </p>
-
-          {isLobby && (
-            <div>
-              {Object.entries(gameState.players).map(([id, player]) => (
-                <div
-                  key={id}
-                  style={{
-                    margin: 5,
-                    padding: 10,
-                    backgroundColor: player.color,
-                    color: "#fff",
-                  }}
-                >
-                  {id} {id === playerId ? "(You)" : ""}{" "}
-                  {gameState.turn === id ? "(Current Turn)" : ""}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div>
-            <h3>Turn Order:</h3>
-            {(gameState.turnOrder || []).map((id, index) => {
-              const player = gameState.players[id];
-              if (!player) return null; // safety check for disconnected players
-
-              return (
-                <div
-                  key={id}
-                  style={{
-                    margin: 5,
-                    padding: 10,
-                    backgroundColor: player.color,
-                    color: "#fff",
-                  }}
-                >
-                  {index + 1}. {id} {id === playerId ? "(You)" : ""}{" "}
-                  {gameState.turn === id ? "(Current Turn)" : ""}
-                  {gameState.lastRolls?.[id] && (
-                    <> - Last Roll: {gameState.lastRolls[id][0]} + {gameState.lastRolls[id][1]} = {gameState.lastRolls[id][0] + gameState.lastRolls[id][1]}</>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-
-          {/* dice roll */}
-          {gameState.lastRoll && (
-            <p>
-              <strong>Last Roll:</strong> {gameState.lastRoll[0]} + {gameState.lastRoll[1]} = {gameState.lastRoll[0] + gameState.lastRoll[1]}
-            </p>
-          )}
-
-          {gameState.phase === Phase.ROLL_FOR_TURN_ORDER &&
-            !(gameState.turnOrderRolls?.[playerId]) && (
-              <button onClick={() => socket.emit(Phase.ROLL_FOR_TURN_ORDER)}>
-                Roll Dice for Turn Order
-              </button>
-            )}
-
-          {gameState.phase === Phase.ROLL_FOR_TURN_ORDER && gameState.turnOrderRolls && (
-            <div>
-              <h3>Rolls for Turn Order:</h3>
-              {Object.entries(gameState.turnOrderRolls).map(([id, roll]) => (
-                <p key={id}>
-                  {id} {id === playerId ? "(You)" : ""}: {roll}
-                </p>
-              ))}
-            </div>
-          )}
-
-          {gameState.phase === Phase.ROLL_FOR_TURN_ORDER && gameState.lastRolls && (
-            <div>
-              <h3>Live Dice Rolls:</h3>
-              {Object.entries(gameState.lastRolls).map(([id, dice]) => (
-                <p key={id}>
-                  {id} {id === playerId ? "(You)" : ""}: {dice[0]} + {dice[1]} = {dice[0] + dice[1]}
-                </p>
-              ))}
-            </div>
-          )}
-
-
-          {isLobby && (
-            <button onClick={() => socket.emit("changeColor")}>
-              Change My Color
-            </button>
-          )}
-          {/* host buttons */}
-          {isLobby && isHost && (
-            <button onClick={() => socket.emit("startGame")}>
-              Start Game
-            </button>
-          )}
-          {isLobby && isHost && (
-            <button onClick={() => socket.emit("rerollBoard")}>
-              Reroll Board
-            </button>
-          )}
           {isLobby === false && isHost && (
             <button onClick={() => socket.emit("exitToLobby")}>
               Exit to Lobby
             </button>
           )}
 
+          {gameState.phase === Phase.LOBBY && (
+            <LobbyPanel
+              isHost={isHost}
+              changeColor={() => socket.emit("changeColor")}
+              startGame={() => socket.emit("startGame")}
+              rerollBoard={() => socket.emit("rerollBoard")}
+              resetGame={() => socket.emit("resetGame")}
 
-          {isLobby === false && isMyTurn && gameState.turnPhase === TurnPhase.ROLL && (
-            <button onClick={() => socket.emit("rollDice")}>Roll Dice</button>
+              players={gameState.players}
+              myPlayerId={playerId}
+              hostId={gameState.hostId}
+            />
           )}
 
-          {isMyTurn && gameState.turnPhase === TurnPhase.ACTION && (
-            <>
-              {isMyTurn && gameState.turnPhase === TurnPhase.ACTION && (
-                <>
-                  {/* <button onClick={() => setBuildMode("road")}>Road</button> */}
-                  <button
-                    style={{
-                      backgroundColor: buildMode === BuildTypes.ROAD ? "palegreen" : "",
-                      cursor: "pointer"
-                    }}
-                    onClick={() => {
-                      setBuildMode(buildMode == BuildTypes.ROAD ? null : BuildTypes.ROAD)
-                    }}>
-                    Road
-                  </button>
-                  <button
-                    style={{
-                      backgroundColor: buildMode === BuildTypes.HOUSE ? "palegreen" : "",
-                      cursor: "pointer"
-                    }}
-                    onClick={() => {
-                      setBuildMode(buildMode == BuildTypes.HOUSE ? null : BuildTypes.HOUSE)
-                    }}>
-                    House
-                  </button>
-                  <button
-                    style={{
-                      backgroundColor: buildMode === BuildTypes.CITY ? "palegreen" : "",
-                      cursor: "pointer"
-                    }}
-                    onClick={() => {
-                      setBuildMode(buildMode == BuildTypes.CITY ? null : BuildTypes.CITY)
-                    }}>
-                    City
-                  </button>
-                  {/* <button onClick={() => setBuildMode("city")}>City</button> */}
-                  <button onClick={() => socket.emit("actionCard")}>Action Card</button>
-                  <button onClick={() => socket.emit("trade")}>Trade</button>
-                  <button onClick={() => {
-                    setBuildMode(null);
-                    socket.emit("endTurn")
-                  }}>End Turn</button>
-                </>
-              )}
-            </>
+          {(gameState.phase === Phase.ROLL_FOR_TURN_ORDER) && (
+            <SetupPanel
+              turnOrder={gameState.turnOrder || []}
+              players={gameState.players || {}}
+              currentPlayerId={gameState.turn}
+              myPlayerId={playerId}
+              hostId={gameState.hostId}
+
+              phase={gameState.phase}
+              turnOrderRolls={gameState.turnOrderRolls}
+              turnOrderRollFunction={() => socket.emit(Phase.ROLL_FOR_TURN_ORDER)}
+              lastRolls={gameState.lastRolls}
+            />
           )}
 
           <GameInfo
@@ -285,20 +149,42 @@ function App() {
             hostId={gameState.hostId}
             lastRoll={gameState.lastRoll || {}}
             bankResources={gameState.bankResources}
+            rollTime={gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ROLL && isMyTurn}
+            rollDice={() => socket.emit("rollDice")}
+            phase={gameState.phase}
+            turnPhase={gameState.turnPhase}
           ></GameInfo>
 
-          <PlayerInventory
-            resources={myResources}
-            ports={myPorts}
-            myPlayerId={playerId}
-          ></PlayerInventory>
+          {gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ACTION && isMyTurn && (
+            <PlayerAction
+              roadAction={() => setBuildMode(buildMode === BuildTypes.ROAD ? null : BuildTypes.ROAD)}
+              houseAction={() => setBuildMode(buildMode === BuildTypes.HOUSE ? null : BuildTypes.HOUSE)}
+              cityAction={() => setBuildMode(buildMode === BuildTypes.CITY ? null : BuildTypes.CITY)}
+              tradeAction={() => setInTradingInterface(inTradingInterface ? false : true)}
+              endTurnAction={() => {
+                setBuildMode(null);
+                socket.emit("endTurn")
+              }}
+              isHost={isHost}
+              exitLobbyAction={() => socket.emit("exitToLobby")}
+            />
+          )}
+
+          {gameState.phase === Phase.IN_GAME && (
+            <PlayerInventory
+              resources={myResources}
+              ports={myPorts}
+              myPlayerId={playerId}
+            ></PlayerInventory>
+          )}
 
         </div>
         <div
           ref={boardRef}
           style={{ flex: 2, maxWidth: '60%', overflow: 'hidden' }}
         >
-          <div style={{ border: "4px solid red" }}>
+          <div style={{ position: "relative", border: "4px solid red" }}>
+            {/* HexBoard stays in the normal flow */}
             <HexBoard
               boardLayout={gameState.boardLayout || []}
               tiles={gameState.tiles || []}
@@ -308,13 +194,11 @@ function App() {
               players={gameState.players || {}}
               currentPlayerId={gameState.turn}
               myPlayerId={playerId}
-              // onPlaceHouse={(vertexKey) => socket.emit("placeHouse", { vertexKey })}
               onPlaceHouse={(vertexKey) => {
                 console.log("Emitting placeHouse to backend:", vertexKey);
                 socket.emit("placeHouse", { vertexKey });
                 setBuildMode(null);
               }}
-              // onPlaceRoad={(edgeKey) => socket.emit("placeRoad", { edgeKey })}
               onPlaceRoad={(edgeKey) => {
                 console.log("Emitting placeRoad to backend:", edgeKey);
                 socket.emit("placeRoad", { edgeKey });
@@ -331,8 +215,69 @@ function App() {
               buildMode={buildMode}
             />
 
+            {/* Centered TradingInterface overlay */}
+            {inTradingInterface && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0,0,0,0.3)",
+                  zIndex: 10,
+                }}
+              >
+                <TradingInterface
+                  resources={myResources}
+                  ports={myPorts}
+                  myPlayerId={playerId}
+                  onPlayerTrade={(offerList, wantList) => {
+                    console.log("Player Trade Clicked:", offerList, wantList); // debug
+                    socket.emit("offerTrade", { offerList, wantList });
+                  }}
+                  onBankTrade={(offerList, wantList) => {
+                    console.log("Bank Trade Clicked:", offerList, wantList); // debug
+                    socket.emit("bankTrade", { offerList: offerList, wantList: wantList });
+                  }}
+                  closeInterface={() => setInTradingInterface(false)}
+                />
+              </div>
+            )}
+
+            {gameState.currentTradeOffer?.active && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0,0,0,0.3)",
+                  zIndex: 10,
+                }}
+              >
+                <CurrentTrade
+                  myPlayerId={playerId}
+                  players={gameState.players}
+                  currentTrade={gameState.currentTradeOffer}
+                  resources={myResources}
+                  closeTrade={() => socket.emit("closeTrade")}
+                  confirmTrade={(id) => socket.emit("acceptTrade", { tradingPlayerId: id })}
+                  onAccept={() => socket.emit("tradeAction", { acceptOffer: true })}
+                  onDecline={() => socket.emit("tradeAction", { acceptOffer: false })}
+                />
+              </div>
+            )}
           </div>
         </div>
+
         <div style={{ flex: 2, maxWidth: '15%' }}>
           <p>right container</p>
           <p>Dummy Logs</p>

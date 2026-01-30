@@ -22,17 +22,20 @@ export default function ResourceBadge({ resource, quantity, size = 80 }) {
 
   const { icon: IconComponent, color } = resourceData;
 
+  // Dim if quantity is 0
+  const displayColor = quantity === 0 ? "#aaaaaa" : color;
+  const iconFill = quantity === 0 ? "#aaaaaa" : color;
+
   return (
     <div
       style={{
         width: size,
         height: size,
         borderRadius: theme.styling.defaultRadius,
-        overflow: "hidden",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: color,
+        backgroundColor: displayColor,
         position: "relative",
         margin: "4px",
         border: `4px solid #000000`,
@@ -43,7 +46,7 @@ export default function ResourceBadge({ resource, quantity, size = 80 }) {
         style={{
           width: "80%",
           height: "80%",
-          fill: color,
+          fill: iconFill,
         }}
       />
 

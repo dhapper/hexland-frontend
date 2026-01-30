@@ -2,6 +2,7 @@ import { truncate } from "../utils/stringUtils";
 import Dice from "./Dice";
 import theme from "../ui/theme";
 import ResourceBadge from "./ResourceBadge";
+import { Phase, TurnPhase } from "../utils/constants";
 
 export default function GameInfo({
     turnOrder = [],
@@ -11,8 +12,11 @@ export default function GameInfo({
     hostId,
     lastRoll,
     bankResources,
+    rollTime,
+    rollDice,
+    phase,
+    turnPhase
 }) {
-
 
     return (
         <div
@@ -24,55 +28,67 @@ export default function GameInfo({
                 margin: theme.styling.componentMargin
             }}
         >
-            {turnOrder.map((id, index) => {
-                const player = players[id] || { color: "#999" }; // fallback
-                const isMe = id === myPlayerId;
-                const isCurrentTurn = id === currentPlayerId;
-                const isHost = id === hostId;
 
-                return (
-                    <div
-                        key={id}
-                        style={{
-                            marginBottom: 10,
-                            padding: 10,
-                            backgroundColor: player.color,
-                            color: "#fff",
-                            borderRadius: theme.styling.defaultRadius,
-                            border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
-                        }}
-                    >
-                        {/* First line: Host | Name | YOU */}
-                        <div style={{ display: "flex" }}>
+            {/* <h3>
+                <strong>Phase:</strong>{" "}
+                {turnPhase}
+            </h3> */}
 
-                            {/* Name centered */}
-                            <strong style={{ flex: 1, textAlign: "left", textShadow: "0px 0px 4px black" }}>
-                                {truncate(id)}
-                            </strong>
+            {phase !== Phase.LOBBY && (
 
-                            {/* Host / YOU indicator*/}
-                            <span style={{ width: "3em", textAlign: "right" }}>
-                                {isHost
-                                    ? "✪"      // you are the host, show star instead of YOU
-                                    : !isHost && isMe
-                                        ? "YOU"    // you are not host, show YOU
-                                        : ""       // anyone else, show nothing
-                                }
-                            </span>
+                turnOrder.map((id, index) => {
+                    const player = players[id] || { color: "#999" }; // fallback
+                    const isMe = id === myPlayerId;
+                    const isCurrentTurn = id === currentPlayerId;
+                    const isHost = id === hostId;
 
+                    return (
+
+                        <div
+                            key={id}
+                            style={{
+                                marginBottom: 10,
+                                padding: 10,
+                                backgroundColor: player.color,
+                                color: "#fff",
+                                borderRadius: theme.styling.defaultRadius,
+                                border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
+                            }}
+                        >
+
+                            {/* First line: Host | Name | YOU */}
+                            <div style={{ display: "flex" }}>
+
+                                {/* Name centered */}
+                                <strong style={{ flex: 1, textAlign: "left", textShadow: "0px 0px 4px black" }}>
+                                    {truncate(id)}
+                                </strong>
+
+                                {/* Host / YOU indicator*/}
+                                <span style={{ width: "3em", textAlign: "right" }}>
+                                    {isHost
+                                        ? "✪"      // you are the host, show star instead of YOU
+                                        : !isHost && isMe
+                                            ? "YOU"    // you are not host, show YOU
+                                            : ""       // anyone else, show nothing
+                                    }
+                                </span>
+
+                            </div>
+
+
+                            {/* Second line: Current turn (centered) */}
+                            {isCurrentTurn && (
+                                <div style={{ fontSize: "0.9em", fontStyle: "italic", textAlign: "left", marginTop: "4px", textShadow: "0px 0px 4px black" }}>
+                                    current turn
+                                </div>
+                            )}
                         </div>
 
+                    );
+                })
 
-                        {/* Second line: Current turn (centered) */}
-                        {isCurrentTurn && (
-                            <div style={{ fontSize: "0.9em", fontStyle: "italic", textAlign: "left", marginTop: "4px", textShadow: "0px 0px 4px black" }}>
-                                current turn
-                            </div>
-                        )}
-                    </div>
-
-                );
-            })}
+            )}
 
             <div
                 style={{
@@ -88,11 +104,17 @@ export default function GameInfo({
             </div>
 
             {/* dice roll */}
+            {rollTime && (
+                <button
+                    onClick={rollDice}
+                >Roll The Dice</button>
+            )}
+
             {lastRoll[0] && (
                 <div style={{ color: theme.colors.lightAccent, textShadow: "0px 0px 4px black" }}>
-                        <strong>
-                            Last roll: <Dice value={lastRoll[0]} /> <Dice value={lastRoll[1]} />
-                        </strong>
+                    <strong>
+                        Last roll: <Dice value={lastRoll[0]} /> <Dice value={lastRoll[1]} />
+                    </strong>
                 </div>
             )}
 

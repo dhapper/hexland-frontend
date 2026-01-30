@@ -8,7 +8,6 @@ export default function PortBadge({
   backgroundColor = "#816751",
   textColor = "#000000"
 }) {
-  const darkBorder = "#29201f";
 
   return (
     <div
