@@ -11,6 +11,7 @@ export default function PlayerAction({
     isHost,
     exitLobbyAction,
     actionTime,
+    buildCard,
 }) {
     return (
 
@@ -37,6 +38,7 @@ export default function PlayerAction({
                     onClick={cityAction}
                 >City</button>
                 <button
+                    onClick={() => buildCard()}
                 >Card</button>
                 <button
                     onClick={tradeAction}

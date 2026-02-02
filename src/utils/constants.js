@@ -25,3 +25,11 @@ export const Resource = {
   BRICK: "brick",
   SHEEP: "sheep"
 };
+
+export const DevCard = {
+    MONOPOLY: "monopoly",
+    ROAD_BUILDING: "roadBuilding",
+    INVENTION: "invention",
+    KNIGHT: "knight",
+    VICTORY_POINT: "victoryPoint"
+};

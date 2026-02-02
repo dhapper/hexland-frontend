@@ -1,12 +1,14 @@
 import theme from "../ui/theme";
 import PortBadge from "./PortBadge";
 import ResourceBadge from "./ResourceBadge";
+import DevCard from "./DevCard";
 
 export default function PlayerInventory({
     resources,
     ports,
     myPlayerId,
-
+    myCards,
+    playDevCard
 }) {
 
     // show resource / quantity - DONE
@@ -38,6 +40,50 @@ export default function PlayerInventory({
                         <ResourceBadge resource={res} quantity={amount}></ResourceBadge>
                     ))}
             </div>
+
+            {/* <div style={{ marginTop: "10px" }}>
+                <strong>My Cards</strong>
+
+                {(!myCards || Object.keys(myCards).length === 0) && (
+                    <div style={{ fontSize: 12, opacity: 0.7 }}>
+                        No cards
+                    </div>
+                )}
+
+                {myCards && Object.entries(myCards).map(([card, count]) => (
+                    <div key={card}>
+                        {card.toUpperCase()} × {count}
+                    </div>
+                ))}
+            </div> */}
+
+            <div
+                style={{
+                    display: "flex",
+                    gap: "8px",
+                    flexWrap: "wrap", // optional: wraps to next line if too many
+                    alignItems: "center",
+                }}
+            >
+                {/* <strong>My Cards</strong> */}
+
+                {/* {(!myCards || Object.keys(myCards).length === 0) && (
+                    <div style={{ fontSize: 12, opacity: 0.7 }}>No cards</div>
+                )} */}
+
+                {myCards &&
+                    Object.entries(myCards).map(([cardType, count]) => (
+                        <DevCard
+                            key={cardType}
+                            cardType={cardType}
+                            quantity={count}
+                            size={50}
+                            playDevCard={playDevCard}
+                        />
+                    ))}
+            </div>
+
+
 
             <div
                 style={{

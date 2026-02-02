@@ -3,6 +3,7 @@ import React from "react";
 import Hex from "./Hex";
 import Vertex from "./Vertex";
 import Edge from "./Edge";
+import Robber from "./Robber";
 import { TILE_TYPES } from "../utils/tileTypes";
 import { BuildTypes, Phase } from "../utils/constants";
 
@@ -22,6 +23,9 @@ export default function HexBoard({
   gameState,
   socket,
   buildMode,
+  robber,
+  placeRobber,
+  debug
 }) {
   // ---------------- CONFIG ----------------
   const BASE_SIZE = 60;   // logical hex radius
@@ -80,7 +84,17 @@ export default function HexBoard({
         const tile = tiles[tileIndex++] || { type: "unknown" };
         const tileColor = TILE_TYPES.find(t => t.type === tile.type)?.color || "#000";
 
-        const hex = { id: `${row}-${col}`, row, col, x, y, color: tileColor, type: tile.type, number: tile.number };
+        const hex = {
+          id: `${row}-${col}`,
+          tileId: tileIndex - 1, // 🔥 IMPORTANT
+          row,
+          col,
+          x,
+          y,
+          color: tileColor,
+          type: tile.type,
+          number: tile.number
+        };
         rowArr.push(hex);
 
         minX = Math.min(minX, x - size);
@@ -125,7 +139,7 @@ export default function HexBoard({
         justifyContent: "center",
         alignItems: "center",
         minHeight: "100vh",
-        border: "3px solid red",
+        ...(debug && { border: "4px solid yellow" }),
       }}
     >
       <svg
@@ -133,20 +147,22 @@ export default function HexBoard({
         width="100%"
         height="100%"
         preserveAspectRatio="xMidYMid meet"
-        style={{ border: "3px solid lime" }}
+        style={{ ...(debug && { border: "4px solid lime" }), }}
         overflow="visible"
       >
         <g transform={`scale(${SCALE})`}>
           {/* Debug bounds */}
-          <rect
-            x={bounds.minX}
-            y={bounds.minY}
-            width={bounds.width}
-            height={bounds.height}
-            fill="none"
-            stroke="blue"
-            strokeWidth="4"
-          />
+          {debug && (
+            <rect
+              x={bounds.minX}
+              y={bounds.minY}
+              width={bounds.width}
+              height={bounds.height}
+              fill="none"
+              stroke="blue"
+              strokeWidth="4"
+            />
+          )}
 
           {/* Ports */}
           {ports.map((port, i) => {
@@ -197,6 +213,14 @@ export default function HexBoard({
                 >
                   {hex.type}
                 </text>
+
+                {/* Robber */}
+                {robber?.tileId === hex.tileId && (
+                  <Robber x={hex.x + 30} y={hex.y + 10} size={28} placeRobber={false}/>
+                )}
+                {robber?.mustBePlaced && robber?.tileId !== hex.tileId && myPlayerId === robber.placingPlayer && (
+                  <Robber x={hex.x + 30} y={hex.y + 10} size={28} placeRobber={true} onPlaceRobber={() => placeRobber(hex.tileId)}/>
+                )}
 
                 {/* Number inside beige square */}
                 {hex.number != null && (
@@ -343,7 +367,7 @@ export default function HexBoard({
                   }}
                 />
                 {v.buildingType === BuildTypes.CITY && (
-                  
+
                   <text
                     x={v.x - 1}
                     y={v.y + 7} // slightly lower to vertically center
@@ -360,6 +384,19 @@ export default function HexBoard({
             );
 
           })}
+
+          {/* {tiles.map(tile => {
+            const hasRobber = robber?.tileId === tile.id;
+            <>hi</>
+            return (
+              <div key={tile.id}>
+                Tile {tile.id} ({tile.type})
+                {hasRobber && <span> 🏴 Robber</span>}
+              </div>
+            );
+          })} */}
+
+
         </g>
       </svg>
     </div>

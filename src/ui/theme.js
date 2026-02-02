@@ -6,6 +6,10 @@ const theme = {
     componentBackground: "#202c46",
     panelBackground: "#1b1f42",
 
+    knightCard: "#957cce",
+    vpCard: "#e79965",
+    altCard: "#568bd1"
+
     // primary: "#ff6f61",      // main accent
     // darkAccent: "#222222",   // for borders or text on white
     // lightAccent: "#fff",     // for background

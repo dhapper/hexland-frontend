@@ -141,11 +141,11 @@ export default function CurrentTrade({
                         <button
                             onClick={onDecline}
                             style={{
-                                padding: "6px 12px",
-                                backgroundColor: "red",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "4px",
+                                // padding: "6px 12px",
+                                // backgroundColor: "red",
+                                // color: "white",
+                                // border: "none",
+                                // borderRadius: "4px",
                                 cursor: "pointer",
                             }}
                         >

@@ -9,10 +9,15 @@ import CurrentTrade from "./ui/CurrentTrade";
 import PlayerAction from "./ui/PlayerAction";
 import SetupPanel from "./ui/SetupPanel";
 import LobbyPanel from "./ui/LobbyPanel";
+import theme from "./ui/theme";
+import DiscardInterface from "./ui/DiscardInterface";
+import ChooseStealPlayer from "./ui/ChooseStealPlayer";
 
 // const socket = io("http://localhost:4000");
 // const socket = io("https://hexland-backend.onrender.com");
 const socket = io(process.env.REACT_APP_BACKEND_URL);
+
+const debug = false;
 
 console.log("Backend URL:", process.env.REACT_APP_BACKEND_URL);
 
@@ -104,13 +109,54 @@ function App() {
     <div style={{ background: "#524f4f", height: "100vh" }}>
 
       <div style={{ display: 'flex', height: '100vh' }}>
-        <div style={{ flex: 1, maxWidth: '25%' }}>
+        <div style={{ flex: 1, maxWidth: '25%', borderRight: `4px solid ${theme.colors.lightAccent}` }}>
+
+          {/* ===== LEFT PANEL ===== */}
 
           {isLobby === false && isHost && (
             <button onClick={() => socket.emit("exitToLobby")}>
               Exit to Lobby
             </button>
           )}
+
+          {/* ===== ROBBER DEBUG ===== */}
+          {/* {gameState.robber && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: 8,
+                border: "2px dashed hotpink",
+                borderRadius: 6,
+                background: "#1e1e1e",
+                color: "#fff",
+                fontSize: 12,
+              }}
+            >
+              <strong>Robber State</strong>
+
+              <div>tileId: {gameState.robber.tileId ?? "none"}</div>
+              <div>mustBePlaced: {String(gameState.robber.mustBePlaced)}</div>
+              <div>fromRolling: {String(gameState.robber.fromRolling)}</div>
+
+              <div>
+                mustDiscard:
+                <pre style={{ margin: 0 }}>
+                  {JSON.stringify(gameState.robber.mustDiscard || {}, null, 2)}
+                </pre>
+              </div>
+
+              <div>
+                playersToStealFrom:
+                <pre style={{ margin: 0 }}>
+                  {JSON.stringify(gameState.robber.playersToStealFrom || [], null, 2)}
+                </pre>
+              </div>
+
+              <p>{gameState.robber?.mustDiscard?.[playerId]?.satisfied ? "true" : "false"}</p>
+              <p>{gameState.robber?.mustDiscard?.[playerId]?.required}</p>
+
+            </div>
+          )} */}
 
           {gameState.phase === Phase.LOBBY && (
             <LobbyPanel
@@ -155,18 +201,17 @@ function App() {
             turnPhase={gameState.turnPhase}
           ></GameInfo>
 
-          {gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ACTION && isMyTurn && (
+          {gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ACTION && isMyTurn && !gameState.robber?.mustBePlaced && (
             <PlayerAction
               roadAction={() => setBuildMode(buildMode === BuildTypes.ROAD ? null : BuildTypes.ROAD)}
               houseAction={() => setBuildMode(buildMode === BuildTypes.HOUSE ? null : BuildTypes.HOUSE)}
               cityAction={() => setBuildMode(buildMode === BuildTypes.CITY ? null : BuildTypes.CITY)}
               tradeAction={() => setInTradingInterface(inTradingInterface ? false : true)}
-              endTurnAction={() => {
-                setBuildMode(null);
-                socket.emit("endTurn")
-              }}
+              endTurnAction={() => socket.emit("endTurn")}
               isHost={isHost}
               exitLobbyAction={() => socket.emit("exitToLobby")}
+              buildCard={() => socket.emit("drawDevCard", playerId)}
+              // confirmTrade={(id) => socket.emit("acceptTrade", { tradingPlayerId: id })}
             />
           )}
 
@@ -175,15 +220,25 @@ function App() {
               resources={myResources}
               ports={myPorts}
               myPlayerId={playerId}
+              myCards={gameState.players[playerId].actionCards}
+              playDevCard={(cardName) => socket.emit("playDevCard", cardName, playerId)}
             ></PlayerInventory>
           )}
 
         </div>
         <div
           ref={boardRef}
-          style={{ flex: 2, maxWidth: '60%', overflow: 'hidden' }}
+          style={{ flex: 2, maxWidth: '60%', overflow: 'hidden', backgroundColor: "#212063" }}
         >
-          <div style={{ position: "relative", border: "4px solid red" }}>
+
+          {/* ===== CENTRE PANEL ===== */}
+
+          <div
+            style={{
+              position: "relative",
+              ...(debug && { border: "4px solid red" }),
+            }}
+          >
             {/* HexBoard stays in the normal flow */}
             <HexBoard
               boardLayout={gameState.boardLayout || []}
@@ -213,6 +268,13 @@ function App() {
               gameState={gameState}
               socket={socket}
               buildMode={buildMode}
+              robber={gameState.robber}
+              placeRobber={(id) => {
+                console.log("pressed")
+                socket.emit("placeRobber", { tileId: id })
+              }
+              }
+              debug={debug}
             />
 
             {/* Centered TradingInterface overlay */}
@@ -248,6 +310,42 @@ function App() {
               </div>
             )}
 
+            {gameState.robber?.step === "discarding" &&
+              // gameState.robber.mustDiscard?.[playerId] &&
+              // !gameState.robber.mustDiscard[playerId]?.satisfied &&
+              (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                    zIndex: 10,
+                  }}
+                >
+                  <DiscardInterface
+                    resources={myResources}
+                    discardCount={gameState.robber?.mustDiscard?.[playerId]?.required}
+                    onSubmitDiscard={(discardList) => {
+                      console.log("(app.js) discardList:", discardList); // debug
+                      // submitDiscard
+                      // socket.emit("bankTrade", { offerList: offerList, wantList: wantList });
+                      socket.emit("submitDiscard", { discardList: discardList });
+                    }}
+
+
+                    robber={gameState.robber}
+                    myPlayerId={playerId}
+                    satisfied={gameState.robber?.mustDiscard?.[playerId]?.satisfied || !gameState.robber?.mustDiscard?.[playerId]}
+                  />
+                </div>
+              )}
+
             {gameState.currentTradeOffer?.active && (
               <div
                 style={{
@@ -275,10 +373,41 @@ function App() {
                 />
               </div>
             )}
+
+            {gameState.robber?.step === "stealing" &&
+              gameState.robber?.placingPlayer === playerId &&
+              gameState.robber.playersToStealFrom?.length > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                    zIndex: 10,
+                  }}
+                >
+                  <ChooseStealPlayer
+                    players={gameState.players}
+                    playersToStealFrom={gameState.robber?.playersToStealFrom}
+                    onSelectPlayer={(id) => {
+                      console.log("app.js log for victimId: ",id)
+                      socket.emit("stealRandomResource", { victimId: id })
+                    }}
+                  />
+                </div>
+              )}
           </div>
         </div>
 
         <div style={{ flex: 2, maxWidth: '15%' }}>
+
+          {/* ===== RIGHT PANEL ===== */}
+
           <p>right container</p>
           <p>Dummy Logs</p>
           <p>Turn X: Colour/Name</p>
@@ -311,7 +440,7 @@ function App() {
         </div>
       </div>
 
-    </div>
+    </div >
   );
 }
 
