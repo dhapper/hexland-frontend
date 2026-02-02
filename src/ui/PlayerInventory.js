@@ -8,6 +8,8 @@ export default function PlayerInventory({
     ports,
     myPlayerId,
     myCards,
+    cardsBoughtThisTurn,
+    canPlayCard,
     playDevCard
 }) {
 
@@ -71,14 +73,16 @@ export default function PlayerInventory({
                     <div style={{ fontSize: 12, opacity: 0.7 }}>No cards</div>
                 )} */}
 
-                {myCards &&
-                    Object.entries(myCards).map(([cardType, count]) => (
+                {myCards && 
+                    Object.entries(myCards).filter(([_, count]) => count >= 1).map(([cardType, count]) => (
                         <DevCard
                             key={cardType}
                             cardType={cardType}
                             quantity={count}
                             size={50}
                             playDevCard={playDevCard}
+                            // canUseThisTurn={count > (cardsBoughtThisTurn?.[cardType] || 0)}
+                             canUseThisTurn={count > (cardsBoughtThisTurn?.[cardType] || 0) && canPlayCard}
                         />
                     ))}
             </div>

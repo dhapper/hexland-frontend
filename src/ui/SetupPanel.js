@@ -47,6 +47,7 @@ export default function SetupPanel(props) {
                             display: "flex",
                             alignItems: "center",
                             gap: "12px",
+                            flexWrap: "wrap",
                         }}
                     >
                         {/* PLAYER CARD */}

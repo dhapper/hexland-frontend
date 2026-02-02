@@ -16,7 +16,7 @@ const devCardMap = {
     [DevCardType.VICTORY_POINT]: { icon: VictoryPointIcon, color: theme.colors.vpCard, solid: true },
 };
 
-export default function DevCard({ cardType, quantity = 1, size = 80, playDevCard }) {
+export default function DevCard({ cardType, quantity = 1, size = 80, playDevCard, canUseThisTurn = true }) {
     const [hovered, setHovered] = useState(false);
 
     const cardData = devCardMap[cardType];
@@ -24,19 +24,22 @@ export default function DevCard({ cardType, quantity = 1, size = 80, playDevCard
 
     const { icon: IconComponent, color, solid } = cardData;
 
-    // Decide fill color based on whether it's a solid card
-    const iconFill = solid ? color : "#000000"; // black for thin-line cards
-    const bgColor = hovered ? "#7adb66" : color; // background is always card color
-    const borderColor = "#000000";
+    // Decide icon fill color based on whether it's solid
+    const iconFill = solid ? color : "#000000";
+
+    // Background is always card color
+    const bgColor = color;
+
+    // Border color depends on whether it can be used this turn
+    const borderColor = canUseThisTurn ? "#000000" : "#888888"; // greyed out if not usable
 
     return (
         <div
             onClick={() => {
-                console.log("Clicked dev card:", cardType);
-                playDevCard?.(cardType);
+                if (canUseThisTurn) playDevCard?.(cardType);
             }}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
+            onMouseEnter={() => canUseThisTurn && setHovered(true)}
+            onMouseLeave={() => canUseThisTurn && setHovered(false)}
             style={{
                 width: size,
                 height: size,
@@ -51,9 +54,9 @@ export default function DevCard({ cardType, quantity = 1, size = 80, playDevCard
                 position: "relative",
                 margin: "4px",
                 overflow: "visible",
-                cursor: "pointer",
-                transition: "background-color 0.15s ease, transform 0.1s ease",
-                transform: hovered ? "scale(1.05)" : "scale(1)",
+                cursor: canUseThisTurn ? "pointer" : "not-allowed",
+                transition: canUseThisTurn ? "background-color 0.15s ease, transform 0.1s ease" : "none",
+                transform: canUseThisTurn && hovered ? "scale(1.05)" : "scale(1)",
             }}
         >
             <IconComponent
@@ -61,11 +64,10 @@ export default function DevCard({ cardType, quantity = 1, size = 80, playDevCard
                     width: "70%",
                     height: "70%",
                     fill: iconFill,
-                    stroke: "#000000", // outline for visibility
+                    stroke: "#000000",
                     strokeWidth: 0.1,
                     pointerEvents: "none",
                 }}
-            // playDevCard={playDevCard}
             />
 
             {quantity > 1 && (

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
-import { BuildTypes, Phase, TurnPhase, Resource } from "./utils/constants";
+import { BuildTypes, Phase, TurnPhase, Resource, DevCard } from "./utils/constants";
 import HexBoard from "./components/HexBoard";
 import GameInfo from "./ui/GameInfo";
 import PlayerInventory from "./ui/PlayerInventory";
@@ -12,6 +12,8 @@ import LobbyPanel from "./ui/LobbyPanel";
 import theme from "./ui/theme";
 import DiscardInterface from "./ui/DiscardInterface";
 import ChooseStealPlayer from "./ui/ChooseStealPlayer";
+import MonopolyInterface from "./ui/MonopolyInterface";
+import InventionInterface from "./ui/InventionInterface";
 
 // const socket = io("http://localhost:4000");
 // const socket = io("https://hexland-backend.onrender.com");
@@ -36,17 +38,63 @@ function App() {
   const myId = playerId; // 👈 single source of truth
   const isHost = gameState.hostId === myId;
   const isLobby = gameState.phase === Phase.LOBBY;
+  const isMyTurn = playerId === gameState.turn;
 
   const myResources = gameState.players?.[playerId]?.resources || {};
   const myPorts = (gameState.ports || []).filter(port =>
     port.owner.includes(playerId)
   );
+  const playerActionDisplayTime = gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ACTION && isMyTurn && !gameState.robber?.mustBePlaced;
 
   const [inTradingInterface, setInTradingInterface] = useState(false);
 
   const [boardScale, setBoardScale] = useState(0.8); // default
 
-  const [buildMode, setBuildMode] = useState(null); // "house", "road", etc.
+  // const [buildMode, setBuildMode] = useState(null); // "house", "road", etc.
+  const [buildIntent, setBuildIntent] = useState(null);
+  // const buildMode = (() => {
+  //   // SETUP
+  //   if (gameState.phase === Phase.SETUP) {
+  //     return gameState.setupStep; // "house" or "road"
+  //   }
+
+  //   // DEV CARD: Road Building
+  //   if (gameState.turnPhase === DevCard.ROAD_BUILDING) {
+  //     return BuildTypes.ROAD;
+  //   }
+
+  //   // NORMAL ACTION PHASE
+  //   if (gameState.turnPhase === TurnPhase.ACTION && isMyTurn) {
+  //     return null; // player chooses via UI buttons
+  //   }
+
+  //   return null;
+  // })();
+  // const effectiveBuildMode =
+  // gameState.turnPhase === DevCard.ROAD_BUILDING
+  //   ? BuildTypes.ROAD
+  //   : buildIntent;
+  const buildMode = (() => {
+    // 1️⃣ SETUP phase forces build type
+    if (gameState.phase === Phase.SETUP) {
+      return gameState.setupStep; // HOUSE or ROAD
+    }
+
+    // 2️⃣ Road Building dev card forces ROAD
+    if (gameState.turnPhase === DevCard.ROAD_BUILDING) {
+      return BuildTypes.ROAD;
+    }
+
+    // 3️⃣ Normal action phase = player's choice
+    if (gameState.turnPhase === TurnPhase.ACTION && isMyTurn) {
+      return buildIntent;
+    }
+
+    // 4️⃣ Everything else = no building
+    return null;
+  })();
+
+
 
   const boardRef = useRef(null);
 
@@ -76,6 +124,14 @@ function App() {
     };
   }, []);
 
+  // useEffect(() => {
+  //   if (gameState.turnPhase === DevCard.ROAD_BUILDING) {
+  //     setBuildMode(BuildTypes.ROAD);
+  //   } else {
+  //     // setBuildMode(null);
+  //   }
+  // }, [gameState.turnPhase]);
+
   // for wheel listener
   useEffect(() => {
     if (!boardRef.current) return;
@@ -101,10 +157,6 @@ function App() {
   }, [boardRef]);
 
 
-
-  const isMyTurn = playerId === gameState.turn;
-
-
   return (
     <div style={{ background: "#524f4f", height: "100vh" }}>
 
@@ -118,6 +170,45 @@ function App() {
               Exit to Lobby
             </button>
           )}
+
+          <div>{gameState.turnPhase}</div>
+          <div>hi{String(gameState.devCardRoadBuildingFirstRoadPlaced)}</div>
+          <div>{buildMode}</div>
+
+          {/* <div style={{ marginTop: "10px" }}>
+            <strong>My Cards</strong>
+
+            {!gameState.players?.[playerId] ? (
+              <div style={{ fontSize: 12, opacity: 0.7 }}>
+                Player not found
+              </div>
+            ) : (
+              <>
+                {(!gameState.players[playerId].actionCards || Object.keys(gameState.players[playerId].actionCards).length === 0) && (
+                  <div style={{ fontSize: 12, opacity: 0.7 }}>
+                    No cards
+                  </div>
+                )}
+
+                {gameState.players[playerId].actionCards && Object.entries(gameState.players[playerId].actionCards).map(([card, count]) => (
+                  <div key={card}>
+                    {card.toUpperCase()} × {count}
+                  </div>
+                ))}
+
+                {gameState.players[playerId].devCardsBoughtThisTurn &&
+                  Object.entries(gameState.players[playerId].devCardsBoughtThisTurn).map(([card, count]) => (
+                    <div key={card}>
+                      {card.toUpperCase()} × {count}
+                    </div>
+                  ))}
+              </>
+            )}
+          </div> */}
+
+          {/* <div>
+            {gameState.players[playerId].actionCards}
+          </div> */}
 
           {/* ===== ROBBER DEBUG ===== */}
           {/* {gameState.robber && (
@@ -201,17 +292,24 @@ function App() {
             turnPhase={gameState.turnPhase}
           ></GameInfo>
 
-          {gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ACTION && isMyTurn && !gameState.robber?.mustBePlaced && (
+          {/* {gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ACTION && isMyTurn && !gameState.robber?.mustBePlaced && ( */}
+          {playerActionDisplayTime && (
             <PlayerAction
-              roadAction={() => setBuildMode(buildMode === BuildTypes.ROAD ? null : BuildTypes.ROAD)}
-              houseAction={() => setBuildMode(buildMode === BuildTypes.HOUSE ? null : BuildTypes.HOUSE)}
-              cityAction={() => setBuildMode(buildMode === BuildTypes.CITY ? null : BuildTypes.CITY)}
+              // roadAction={() => setBuildMode(buildMode === BuildTypes.ROAD ? null : BuildTypes.ROAD)}
+              // houseAction={() => setBuildMode(buildMode === BuildTypes.HOUSE ? null : BuildTypes.HOUSE)}
+              // cityAction={() => setBuildMode(buildMode === BuildTypes.CITY ? null : BuildTypes.CITY)}
+              roadAction={() => setBuildIntent(BuildTypes.ROAD)}
+              houseAction={() => setBuildIntent(BuildTypes.HOUSE)}
+              cityAction={() => setBuildIntent(BuildTypes.CITY)}
               tradeAction={() => setInTradingInterface(inTradingInterface ? false : true)}
-              endTurnAction={() => socket.emit("endTurn")}
+              endTurnAction={() => {
+                setBuildIntent(null);
+                socket.emit("endTurn")
+              }}
               isHost={isHost}
               exitLobbyAction={() => socket.emit("exitToLobby")}
               buildCard={() => socket.emit("drawDevCard", playerId)}
-              // confirmTrade={(id) => socket.emit("acceptTrade", { tradingPlayerId: id })}
+            // confirmTrade={(id) => socket.emit("acceptTrade", { tradingPlayerId: id })}
             />
           )}
 
@@ -221,6 +319,8 @@ function App() {
               ports={myPorts}
               myPlayerId={playerId}
               myCards={gameState.players[playerId].actionCards}
+              cardsBoughtThisTurn={gameState.players[playerId].devCardsBoughtThisTurn || {}}
+              canPlayCard={!gameState.players[playerId].playedDevCardThisTurn && playerActionDisplayTime}
               playDevCard={(cardName) => socket.emit("playDevCard", cardName, playerId)}
             ></PlayerInventory>
           )}
@@ -249,21 +349,59 @@ function App() {
               players={gameState.players || {}}
               currentPlayerId={gameState.turn}
               myPlayerId={playerId}
-              onPlaceHouse={(vertexKey) => {
-                console.log("Emitting placeHouse to backend:", vertexKey);
-                socket.emit("placeHouse", { vertexKey });
-                setBuildMode(null);
-              }}
+              // onPlaceHouse={(vertexKey) => {
+              //   console.log("Emitting placeHouse to backend:", vertexKey);
+              //   socket.emit("placeHouse", { vertexKey });
+              //   // setBuildMode(null);
+              // }}
+              // onPlaceRoad={(edgeKey) => {
+              //   console.log("Emitting placeRoad to backend:", edgeKey);
+              //   socket.emit("placeRoad", { edgeKey });
+              //   // setBuildMode(gameState.devCardRoadBuildingFirstRoadPlaced ? BuildTypes.ROAD : null);
+              // }}
+              // onPlaceCity={(vertexKey) => {
+              //   console.log("Emitting placeCity to backend:", vertexKey);
+              //   socket.emit("placeCity", { vertexKey });
+              //   // setBuildMode(null);
+              // }}
               onPlaceRoad={(edgeKey) => {
-                console.log("Emitting placeRoad to backend:", edgeKey);
+                // Only allow if buildIntent is ROAD (prevents extra clicks)
+                if (buildIntent !== BuildTypes.ROAD && gameState.turnPhase === TurnPhase.ACTION) return;
+
                 socket.emit("placeRoad", { edgeKey });
-                setBuildMode(null);
+
+                if (gameState.turnPhase === DevCard.ROAD_BUILDING) {
+                  // First road placed, allow second
+                  if (!gameState.devCardRoadBuildingFirstRoadPlaced) {
+                    setBuildIntent(BuildTypes.ROAD); // still ROAD
+                  } else {
+                    setBuildIntent(null); // second road done
+                  }
+                } else if (gameState.turnPhase === TurnPhase.ACTION) {
+                  // Normal turn, always reset after one
+                  setBuildIntent(null);
+                }
+              }}
+
+              // onPlaceRoad={(edgeKey) => {
+              //   socket.emit("placeRoad", { edgeKey });
+              //   if (gameState.turnPhase === TurnPhase.ACTION) {
+              //     setBuildIntent(null);
+              //   }
+              // }}
+              onPlaceHouse={(vertexKey) => {
+                socket.emit("placeHouse", { vertexKey });
+                if (gameState.turnPhase === TurnPhase.ACTION) {
+                  setBuildIntent(null);
+                }
               }}
               onPlaceCity={(vertexKey) => {
-                console.log("Emitting placeCity to backend:", vertexKey);
                 socket.emit("placeCity", { vertexKey });
-                setBuildMode(null);
+                if (gameState.turnPhase === TurnPhase.ACTION) {
+                  setBuildIntent(null);
+                }
               }}
+
               scale={boardScale}
               gameState={gameState}
               socket={socket}
@@ -395,12 +533,61 @@ function App() {
                     players={gameState.players}
                     playersToStealFrom={gameState.robber?.playersToStealFrom}
                     onSelectPlayer={(id) => {
-                      console.log("app.js log for victimId: ",id)
+                      console.log("app.js log for victimId: ", id)
                       socket.emit("stealRandomResource", { victimId: id })
                     }}
                   />
                 </div>
               )}
+
+            {gameState.turnPhase == DevCard.MONOPOLY && isMyTurn && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0,0,0,0.3)",
+                  zIndex: 10,
+                }}
+              >
+                <MonopolyInterface
+                  onClose={() => socket.emit("setTurnPhase", TurnPhase.ACTION)}
+                  monopolizeResource={(resource) => {
+                    socket.emit("monopolizeResource", playerId, resource)
+                  }}
+                />
+              </div>
+            )}
+
+            {gameState.turnPhase == DevCard.INVENTION && isMyTurn && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0,0,0,0.3)",
+                  zIndex: 10,
+                }}
+              >
+                <InventionInterface
+                  onClose={() => socket.emit("setTurnPhase", TurnPhase.ACTION)}
+                  bankResources={gameState.bankResources}
+                  onSubmitInvention={(wantList) => {
+                    socket.emit("invention", playerId, wantList)
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
