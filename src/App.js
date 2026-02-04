@@ -14,6 +14,10 @@ import DiscardInterface from "./ui/DiscardInterface";
 import ChooseStealPlayer from "./ui/ChooseStealPlayer";
 import MonopolyInterface from "./ui/MonopolyInterface";
 import InventionInterface from "./ui/InventionInterface";
+import { ReactComponent as BackgroundSVG } from "./assets/icons/waves.svg";
+import { canAfford } from "./utils/calculator";
+import { Costs, BuildToCost } from "./utils/constants";
+
 
 // const socket = io("http://localhost:4000");
 // const socket = io("https://hexland-backend.onrender.com");
@@ -39,6 +43,7 @@ function App() {
   const isHost = gameState.hostId === myId;
   const isLobby = gameState.phase === Phase.LOBBY;
   const isMyTurn = playerId === gameState.turn;
+  const myPlayer = gameState.players[playerId];
 
   const myResources = gameState.players?.[playerId]?.resources || {};
   const myPorts = (gameState.ports || []).filter(port =>
@@ -124,13 +129,25 @@ function App() {
     };
   }, []);
 
+  // grey out buy buttons
+  // const [canAfford, setCanAfford] = useState({});
   // useEffect(() => {
-  //   if (gameState.turnPhase === DevCard.ROAD_BUILDING) {
-  //     setBuildMode(BuildTypes.ROAD);
-  //   } else {
-  //     // setBuildMode(null);
-  //   }
-  // }, [gameState.turnPhase]);
+  //   socket.on("canAffordResponse", ({ buildType, canAfford }) => {
+  //     setCanAfford(prev => ({
+  //       ...prev,
+  //       [buildType]: canAfford
+  //     }));
+  //   });
+
+  //   return () => socket.off("canAffordResponse");
+  // }, []);
+
+  // useEffect(() => {
+  //   if (!playerId) return;
+
+  //   socket.emit("canAfford", playerId, BuildTypes.ROAD);
+  // }, [playerId, gameState.players?.[playerId]?.resources]);
+
 
   // for wheel listener
   useEffect(() => {
@@ -171,9 +188,49 @@ function App() {
             </button>
           )}
 
-          <div>{gameState.turnPhase}</div>
+          <div>
+            Can afford road: {canAfford(Costs[BuildToCost.road], myPlayer?.resources) ? "YES" : "NO"}
+          </div>
+
+
+          {/* {gameState?.longestRoad?.playerId ? (
+            <>
+              <div>Owner: {gameState.longestRoad.playerId}</div>
+              <div>Length: {gameState.longestRoad.length}</div>
+            </>
+          ) : (
+            <div>None LR</div>
+          )}
+
+          {gameState?.largestArmy?.playerId ? (
+            <>
+              <div>Owner: {gameState.largestArmy.playerId}</div>
+              <div>Knights Played: {gameState.largestArmy.count}</div>
+              {playerId && gameState.players?.[playerId] && (
+                <div>Your Knights Played: {gameState.players[playerId].knightsPlayed || 0}</div>
+              )}
+            </>
+          ) : (
+            <>
+              <div>None</div>
+              {playerId && gameState.players?.[playerId] && (
+                <div>Your Knights Played: {gameState.players[playerId].knightsPlayed || 0}</div>
+              )}
+            </>
+          )} */}
+
+          {/* <div>yo {playerId}</div>
+          <div>yb {gameState.largestArmy.playerId}</div>
+          <div>ya {gameState.longestRoad.playerId}</div> */}
+          {/* hasLongestRoad={gameState.longestRoad?.playerId === playerId}
+          hasLargestArmy={gameState.largestArmy?.playerId === playerId} */}
+
+
+          {/* <div>{gameState.turnPhase}</div>
           <div>hi{String(gameState.devCardRoadBuildingFirstRoadPlaced)}</div>
           <div>{buildMode}</div>
+          <div>{myPlayer?.visibleVictoryPoints}</div>
+          <div>({myPlayer?.actualVictoryPoints})</div> */}
 
           {/* <div style={{ marginTop: "10px" }}>
             <strong>My Cards</strong>
@@ -309,7 +366,11 @@ function App() {
               isHost={isHost}
               exitLobbyAction={() => socket.emit("exitToLobby")}
               buildCard={() => socket.emit("drawDevCard", playerId)}
-            // confirmTrade={(id) => socket.emit("acceptTrade", { tradingPlayerId: id })}
+              // confirmTrade={(id) => socket.emit("acceptTrade", { tradingPlayerId: id })}
+              canAffordRoad={canAfford(Costs[BuildToCost.road], myPlayer?.resources)}
+              canAffordHouse={canAfford(Costs[BuildToCost.house], myPlayer?.resources)}
+              canAffordCity={canAfford(Costs[BuildToCost.city], myPlayer?.resources)}
+              canAffordDevCard={canAfford(Costs[BuildToCost.devCard], myPlayer?.resources)}
             />
           )}
 
@@ -322,6 +383,8 @@ function App() {
               cardsBoughtThisTurn={gameState.players[playerId].devCardsBoughtThisTurn || {}}
               canPlayCard={!gameState.players[playerId].playedDevCardThisTurn && playerActionDisplayTime}
               playDevCard={(cardName) => socket.emit("playDevCard", cardName, playerId)}
+              hasLongestRoad={gameState.longestRoad?.playerId === playerId}
+              hasLargestArmy={gameState.largestArmy?.playerId === playerId}
             ></PlayerInventory>
           )}
 
@@ -339,7 +402,19 @@ function App() {
               ...(debug && { border: "4px solid red" }),
             }}
           >
+            {/* <BackgroundSVG
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                zIndex: 0, // behind everything
+              }}
+            /> */}
+
             {/* HexBoard stays in the normal flow */}
+            {/* <div style={{ position: "relative", zIndex: 1 }}> */}
             <HexBoard
               boardLayout={gameState.boardLayout || []}
               tiles={gameState.tiles || []}
@@ -414,6 +489,8 @@ function App() {
               }
               debug={debug}
             />
+
+            {/* </div> */}
 
             {/* Centered TradingInterface overlay */}
             {inTradingInterface && (

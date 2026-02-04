@@ -2,6 +2,9 @@ import theme from "../ui/theme";
 import PortBadge from "./PortBadge";
 import ResourceBadge from "./ResourceBadge";
 import DevCard from "./DevCard";
+import { DevCard as DevCardConst } from "../utils/constants";
+import SpecialVictoryCard from "./SpecialVictoryCard";
+import { SpecialVictoryCardConst } from "../utils/constants";
 
 export default function PlayerInventory({
     resources,
@@ -10,10 +13,13 @@ export default function PlayerInventory({
     myCards,
     cardsBoughtThisTurn,
     canPlayCard,
-    playDevCard
+    playDevCard,
+    hasLongestRoad,
+    hasLargestArmy,
+    playerId
 }) {
 
-    // show resource / quantity - DONE
+    // show resource / quantity
     // ports - DONE
     // action cards
     // largest road / largest army
@@ -43,52 +49,6 @@ export default function PlayerInventory({
                     ))}
             </div>
 
-            {/* <div style={{ marginTop: "10px" }}>
-                <strong>My Cards</strong>
-
-                {(!myCards || Object.keys(myCards).length === 0) && (
-                    <div style={{ fontSize: 12, opacity: 0.7 }}>
-                        No cards
-                    </div>
-                )}
-
-                {myCards && Object.entries(myCards).map(([card, count]) => (
-                    <div key={card}>
-                        {card.toUpperCase()} × {count}
-                    </div>
-                ))}
-            </div> */}
-
-            <div
-                style={{
-                    display: "flex",
-                    gap: "8px",
-                    flexWrap: "wrap", // optional: wraps to next line if too many
-                    alignItems: "center",
-                }}
-            >
-                {/* <strong>My Cards</strong> */}
-
-                {/* {(!myCards || Object.keys(myCards).length === 0) && (
-                    <div style={{ fontSize: 12, opacity: 0.7 }}>No cards</div>
-                )} */}
-
-                {myCards && 
-                    Object.entries(myCards).filter(([_, count]) => count >= 1).map(([cardType, count]) => (
-                        <DevCard
-                            key={cardType}
-                            cardType={cardType}
-                            quantity={count}
-                            size={50}
-                            playDevCard={playDevCard}
-                            // canUseThisTurn={count > (cardsBoughtThisTurn?.[cardType] || 0)}
-                             canUseThisTurn={count > (cardsBoughtThisTurn?.[cardType] || 0) && canPlayCard}
-                        />
-                    ))}
-            </div>
-
-
-
             <div
                 style={{
                     display: "flex",
@@ -98,12 +58,60 @@ export default function PlayerInventory({
                     marginTop: "10px"
                 }}
             >
-                {ports
-                    .filter(port => port.owner.includes(myPlayerId))
-                    .map((port, i) => (
-                        <PortBadge offer={port.offer} resource={port.resource} />
+
+                {myCards &&
+                    Object.entries(myCards).filter(([_, count]) => count >= 1).map(([cardType, count]) => (
+                        <DevCard
+                            key={cardType}
+                            cardType={cardType}
+                            quantity={count}
+                            size={50}
+                            playDevCard={playDevCard}
+                            // canUseThisTurn={count > (cardsBoughtThisTurn?.[cardType] || 0)}
+                            canUseThisTurn={count > (cardsBoughtThisTurn?.[cardType] || 0) && canPlayCard && cardType != DevCardConst.VICTORY_POINT}
+                        />
                     ))}
             </div>
+
+
+            {/* {ports.filter(port => port.owner.includes(myPlayerId)) > 0 && ( */}
+                <div
+                    style={{
+                        display: "flex",
+                        gap: "8px",
+                        flexWrap: "wrap", // optional: wraps to next line if too many
+                        alignItems: "center",
+                        marginTop: "10px"
+                    }}
+                >
+                    {ports
+                        .filter(port => port.owner.includes(myPlayerId))
+                        .map((port, i) => (
+                            <PortBadge offer={port.offer} resource={port.resource} />
+                        ))}
+                </div>
+            {/* )} */}
+
+
+            {(hasLongestRoad || hasLargestArmy) && (
+                <div
+                    style={{
+                        display: "flex",
+                        gap: "8px",
+                        flexWrap: "wrap", // optional: wraps to next line if too many
+                        alignItems: "center",
+                        marginTop: "10px"
+                    }}
+                >
+                    {hasLongestRoad && (
+                        <SpecialVictoryCard specialVictoryCard={SpecialVictoryCardConst.LONGEST_ROAD} ></SpecialVictoryCard>
+                    )}
+
+                    {hasLargestArmy && (
+                        <SpecialVictoryCard specialVictoryCard={SpecialVictoryCardConst.LARGEST_ARMY} ></SpecialVictoryCard>
+                    )}
+                </div>
+            )}
 
         </div>
     );

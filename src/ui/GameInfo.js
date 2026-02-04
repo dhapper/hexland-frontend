@@ -29,64 +29,71 @@ export default function GameInfo({
             }}
         >
 
-            {/* <h3>
-                <strong>Phase:</strong>{" "}
-                {turnPhase}
-            </h3> */}
-
             {phase !== Phase.LOBBY && (
 
-                turnOrder.map((id, index) => {
-                    const player = players[id] || { color: "#999" }; // fallback
+                turnOrder.map((id) => {
+                    const player = players[id] || { color: "#999" };
                     const isMe = id === myPlayerId;
                     const isCurrentTurn = id === currentPlayerId;
                     const isHost = id === hostId;
 
-                    return (
+                    const visibleVP = player.visibleVictoryPoints ?? 0;
+                    const actualVP = player.actualVictoryPoints ?? 0;
+                    const vpText = isMe && visibleVP !== actualVP
+                        ? `${visibleVP} (${actualVP})` // show actualVP only for yourself
+                        : `${visibleVP}`;             // everyone else only sees visibleVP
 
+                    return (
                         <div
                             key={id}
                             style={{
                                 marginBottom: 10,
-                                padding: 10,
+                                padding: 7,
                                 backgroundColor: player.color,
                                 color: "#fff",
                                 borderRadius: theme.styling.defaultRadius,
                                 border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
+                                position: "relative",
+                                minHeight: 50,
                             }}
                         >
-
-                            {/* First line: Host | Name | YOU */}
-                            <div style={{ display: "flex" }}>
-
-                                {/* Name centered */}
-                                <strong style={{ flex: 1, textAlign: "left", textShadow: "0px 0px 4px black" }}>
-                                    {truncate(id)}
-                                </strong>
-
-                                {/* Host / YOU indicator*/}
-                                <span style={{ width: "3em", textAlign: "right" }}>
-                                    {isHost
-                                        ? "✪"      // you are the host, show star instead of YOU
-                                        : !isHost && isMe
-                                            ? "YOU"    // you are not host, show YOU
-                                            : ""       // anyone else, show nothing
-                                    }
-                                </span>
-
+                            {/* Top-right indicator */}
+                            <div style={{ position: "absolute", top: 8, right: 8 }}>
+                                {isHost ? "✪" : isMe ? "YOU" : ""}
                             </div>
 
+                            {/* Player name */}
+                            <strong style={{ textShadow: "0px 0px 4px black" }}>
+                                {truncate(id)}
+                            </strong>
 
-                            {/* Second line: Current turn (centered) */}
+                            {/* Current turn */}
                             {isCurrentTurn && (
-                                <div style={{ fontSize: "0.9em", fontStyle: "italic", textAlign: "left", marginTop: "4px", textShadow: "0px 0px 4px black" }}>
+                                <div style={{
+                                    fontSize: "0.9em",
+                                    fontStyle: "italic",
+                                    marginTop: 4,
+                                    textShadow: "0px 0px 4px black"
+                                }}>
                                     current turn
                                 </div>
                             )}
-                        </div>
 
+                            {/* Bottom-right Victory Points */}
+                            <div style={{
+                                position: "absolute",
+                                bottom: 8,
+                                right: 8,
+                                fontWeight: "bold",
+                                textShadow: "0px 0px 4px black"
+                            }}>
+                                {vpText}
+                            </div>
+                        </div>
                     );
                 })
+
+
 
             )}
 

@@ -12,6 +12,10 @@ export default function PlayerAction({
     exitLobbyAction,
     actionTime,
     buildCard,
+    canAffordRoad,
+    canAffordHouse,
+    canAffordCity,
+    canAffordDevCard,
 }) {
     return (
 
@@ -30,21 +34,43 @@ export default function PlayerAction({
             <div style={{}}>
                 <button
                     onClick={roadAction}
+                    disabled={!canAffordRoad}
+                    style={{
+                        cursor: canAffordRoad ? "pointer" : "default"
+                    }}
                 >Road</button>
                 <button
                     onClick={houseAction}
+                    disabled={!canAffordHouse}
+                    style={{
+                        cursor: canAffordHouse ? "pointer" : "default"
+                    }}
                 >House</button>
                 <button
                     onClick={cityAction}
+                    disabled={!canAffordCity}
+                    style={{
+                        cursor: canAffordCity ? "pointer" : "default"
+                    }}
                 >City</button>
                 <button
                     onClick={() => buildCard()}
+                    disabled={!canAffordDevCard}
+                    style={{
+                        cursor: canAffordDevCard ? "pointer" : "default"
+                    }}
                 >Card</button>
                 <button
                     onClick={tradeAction}
+                    style={{
+                        cursor: "pointer"
+                    }}
                 >Trade</button>
                 <button
                     onClick={endTurnAction}
+                    style={{
+                        cursor: "pointer"
+                    }}
                 >End Turn</button>
                 {/* { isHost && (
                     <button

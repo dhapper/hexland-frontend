@@ -33,3 +33,23 @@ export const DevCard = {
     KNIGHT: "knight",
     VICTORY_POINT: "victoryPoint"
 };
+
+export const SpecialVictoryCardConst = {
+    LONGEST_ROAD: "longestRoad",
+    LARGEST_ARMY: "largestArmy",
+};
+
+export const Costs = {
+  ROAD: { wood: 1, brick: 1 },
+  SETTLEMENT: { wood: 1, brick: 1, sheep: 1, wheat: 1 },
+  CITY: { wheat: 2, ore: 3 },
+  DEV_CARD: { sheep: 1, wheat: 1, ore: 1 },
+}
+
+// backend/constants/buildToCost.js
+export const BuildToCost = {
+  house: "SETTLEMENT",
+  road: "ROAD",
+  city: "CITY",
+  devCard: "DEV_CARD",
+};

@@ -369,15 +369,15 @@ export default function HexBoard({
                 {v.buildingType === BuildTypes.CITY && (
 
                   <text
-                    x={v.x - 1}
-                    y={v.y + 7} // slightly lower to vertically center
+                    x={v.x}
+                    y={v.y + 6} // slightly lower to vertically center
                     textAnchor="middle"
                     fontSize={20}
                     fontWeight="bold"
-                    fill="black"
+                    fill="white"
                     pointerEvents="none"
                   >
-                    C
+                    ★
                   </text>
                 )}
               </g>
