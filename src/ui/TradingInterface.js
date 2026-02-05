@@ -11,6 +11,7 @@ export default function TradingInterface({
     onPlayerTrade,
     onBankTrade,
     closeInterface,
+    isMyPairedTurn
 }) {
     // Track what player is offering
     const [offerAmounts, setOfferAmounts] = useState(
@@ -167,15 +168,18 @@ export default function TradingInterface({
 
             {/* Trade buttons */}
             <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
-                <button
-                    onClick={() => {
-                        onPlayerTrade(offerList, wantList);
-                        resetTradeAmounts();
-                    }}
-                    disabled={!offerList.length || !wantList.length}
-                >
-                    Player Trade
-                </button>
+
+                {!isMyPairedTurn && (
+                    <button
+                        onClick={() => {
+                            onPlayerTrade(offerList, wantList);
+                            resetTradeAmounts();
+                        }}
+                        disabled={!offerList.length || !wantList.length}
+                    >
+                        Player Trade
+                    </button>
+                )}
 
                 <button
                     onClick={() => {

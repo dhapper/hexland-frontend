@@ -15,7 +15,8 @@ export default function GameInfo({
     rollTime,
     rollDice,
     phase,
-    turnPhase
+    turnPhase,
+    pairedPlayerId
 }) {
 
     return (
@@ -76,6 +77,18 @@ export default function GameInfo({
                                     textShadow: "0px 0px 4px black"
                                 }}>
                                     current turn
+                                </div>
+                            )}
+
+                            {/* Paired Player */}
+                            {id === pairedPlayerId && (
+                                <div style={{
+                                    fontSize: "0.9em",
+                                    fontStyle: "italic",
+                                    marginTop: 4,
+                                    textShadow: "0px 0px 4px black"
+                                }}>
+                                    paired player
                                 </div>
                             )}
 

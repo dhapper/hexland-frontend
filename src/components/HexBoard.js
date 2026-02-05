@@ -25,6 +25,7 @@ export default function HexBoard({
   buildMode,
   robber,
   placeRobber,
+  isMyPairedTurn,
   debug
 }) {
   // ---------------- CONFIG ----------------
@@ -216,10 +217,10 @@ export default function HexBoard({
 
                 {/* Robber */}
                 {robber?.tileId === hex.tileId && (
-                  <Robber x={hex.x + 30} y={hex.y + 10} size={28} placeRobber={false}/>
+                  <Robber x={hex.x + 30} y={hex.y + 10} size={28} placeRobber={false} />
                 )}
                 {robber?.mustBePlaced && robber?.tileId !== hex.tileId && myPlayerId === robber.placingPlayer && (
-                  <Robber x={hex.x + 30} y={hex.y + 10} size={28} placeRobber={true} onPlaceRobber={() => placeRobber(hex.tileId)}/>
+                  <Robber x={hex.x + 30} y={hex.y + 10} size={28} placeRobber={true} onPlaceRobber={() => placeRobber(hex.tileId)} />
                 )}
 
                 {/* Number inside beige square */}
@@ -266,12 +267,13 @@ export default function HexBoard({
 
             const canShowRoad =
               (isSetup && isMyTurn && gameState.setupStep === BuildTypes.ROAD) ||
-              (isInGame && isMyTurn && buildMode === BuildTypes.ROAD);
+              (isInGame && isMyTurn && buildMode === BuildTypes.ROAD) ||
+              (isMyPairedTurn && buildMode === BuildTypes.ROAD && !isSetup);  // added this
 
             const showEligibleRoadPlacements = canShowRoad && e.active;
 
             const canClick = e.active && !e.placed && (
-              validSetup || validInGame
+              validSetup || validInGame || (isMyPairedTurn && buildMode === BuildTypes.ROAD)
             );
 
             let fillColor;
@@ -319,14 +321,15 @@ export default function HexBoard({
             // Can place a new house
             const showAvailableHouses =
               ((isSetup && isMyTurn && gameState.setupStep === BuildTypes.HOUSE) ||
-                (isInGame && isMyTurn && buildMode === BuildTypes.HOUSE)) &&
+                (isInGame && isMyTurn && buildMode === BuildTypes.HOUSE) ||
+                (isMyPairedTurn && buildMode === BuildTypes.HOUSE && !isSetup)  // added this
+              ) &&
               v.active &&
               !v.buildingType;
 
             // Can upgrade an existing house to a city
             const showAvailableCities =
-              isInGame &&
-              isMyTurn &&
+              ((isInGame && isMyTurn) || isMyPairedTurn) && // added this
               buildMode === BuildTypes.CITY &&
               v.buildingType === BuildTypes.HOUSE &&
               v.playerId === myPlayerId;

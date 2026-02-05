@@ -15,7 +15,8 @@ export const Phase = {
 
 export const TurnPhase = {
   ROLL: "roll",
-  ACTION: "action"
+  ACTION: "action",
+  PAIRED_PLAYER_ACTION: "pairedPlayerAction"
 };
 
 export const Resource = {

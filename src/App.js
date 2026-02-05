@@ -18,16 +18,11 @@ import { ReactComponent as BackgroundSVG } from "./assets/icons/waves.svg";
 import { canAfford } from "./utils/calculator";
 import { Costs, BuildToCost } from "./utils/constants";
 
-
-// const socket = io("http://localhost:4000");
-// const socket = io("https://hexland-backend.onrender.com");
 const socket = io(process.env.REACT_APP_BACKEND_URL);
 
 const debug = false;
 
 console.log("Backend URL:", process.env.REACT_APP_BACKEND_URL);
-
-
 
 function App() {
   const [gameState, setGameState] = useState({
@@ -43,6 +38,7 @@ function App() {
   const isHost = gameState.hostId === myId;
   const isLobby = gameState.phase === Phase.LOBBY;
   const isMyTurn = playerId === gameState.turn;
+  const isMyPairedTurn = playerId === gameState.pairedPlayerId;
   const myPlayer = gameState.players[playerId];
 
   const myResources = gameState.players?.[playerId]?.resources || {};
@@ -50,35 +46,14 @@ function App() {
     port.owner.includes(playerId)
   );
   const playerActionDisplayTime = gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ACTION && isMyTurn && !gameState.robber?.mustBePlaced;
+  const pairedPlayerActionDisplayTime = gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.PAIRED_PLAYER_ACTION && isMyPairedTurn && !gameState.robber?.mustBePlaced;
 
   const [inTradingInterface, setInTradingInterface] = useState(false);
 
   const [boardScale, setBoardScale] = useState(0.8); // default
 
-  // const [buildMode, setBuildMode] = useState(null); // "house", "road", etc.
   const [buildIntent, setBuildIntent] = useState(null);
-  // const buildMode = (() => {
-  //   // SETUP
-  //   if (gameState.phase === Phase.SETUP) {
-  //     return gameState.setupStep; // "house" or "road"
-  //   }
 
-  //   // DEV CARD: Road Building
-  //   if (gameState.turnPhase === DevCard.ROAD_BUILDING) {
-  //     return BuildTypes.ROAD;
-  //   }
-
-  //   // NORMAL ACTION PHASE
-  //   if (gameState.turnPhase === TurnPhase.ACTION && isMyTurn) {
-  //     return null; // player chooses via UI buttons
-  //   }
-
-  //   return null;
-  // })();
-  // const effectiveBuildMode =
-  // gameState.turnPhase === DevCard.ROAD_BUILDING
-  //   ? BuildTypes.ROAD
-  //   : buildIntent;
   const buildMode = (() => {
     // 1️⃣ SETUP phase forces build type
     if (gameState.phase === Phase.SETUP) {
@@ -92,6 +67,11 @@ function App() {
 
     // 3️⃣ Normal action phase = player's choice
     if (gameState.turnPhase === TurnPhase.ACTION && isMyTurn) {
+      return buildIntent;
+    }
+
+    // paired player
+    if (gameState.turnPhase === TurnPhase.PAIRED_PLAYER_ACTION && isMyPairedTurn) {
       return buildIntent;
     }
 
@@ -129,26 +109,6 @@ function App() {
     };
   }, []);
 
-  // grey out buy buttons
-  // const [canAfford, setCanAfford] = useState({});
-  // useEffect(() => {
-  //   socket.on("canAffordResponse", ({ buildType, canAfford }) => {
-  //     setCanAfford(prev => ({
-  //       ...prev,
-  //       [buildType]: canAfford
-  //     }));
-  //   });
-
-  //   return () => socket.off("canAffordResponse");
-  // }, []);
-
-  // useEffect(() => {
-  //   if (!playerId) return;
-
-  //   socket.emit("canAfford", playerId, BuildTypes.ROAD);
-  // }, [playerId, gameState.players?.[playerId]?.resources]);
-
-
   // for wheel listener
   useEffect(() => {
     if (!boardRef.current) return;
@@ -174,6 +134,16 @@ function App() {
   }, [boardRef]);
 
 
+  // For turn log auto scroll
+  const bottomRef = useRef(null);
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({
+      behavior: "smooth", // or "auto"
+    });
+  }, [gameState.turnLogs]);
+
+
+
   return (
     <div style={{ background: "#524f4f", height: "100vh" }}>
 
@@ -189,122 +159,15 @@ function App() {
           )}
 
           <div>
-            Can afford road: {canAfford(Costs[BuildToCost.road], myPlayer?.resources) ? "YES" : "NO"}
+            isMyPairedTurn: {JSON.stringify(isMyPairedTurn)}
+          </div>
+          <div>
+            buildMode: {buildMode}
+          </div>
+          <div>
+            buildIntent: {buildIntent}
           </div>
 
-
-          {/* {gameState?.longestRoad?.playerId ? (
-            <>
-              <div>Owner: {gameState.longestRoad.playerId}</div>
-              <div>Length: {gameState.longestRoad.length}</div>
-            </>
-          ) : (
-            <div>None LR</div>
-          )}
-
-          {gameState?.largestArmy?.playerId ? (
-            <>
-              <div>Owner: {gameState.largestArmy.playerId}</div>
-              <div>Knights Played: {gameState.largestArmy.count}</div>
-              {playerId && gameState.players?.[playerId] && (
-                <div>Your Knights Played: {gameState.players[playerId].knightsPlayed || 0}</div>
-              )}
-            </>
-          ) : (
-            <>
-              <div>None</div>
-              {playerId && gameState.players?.[playerId] && (
-                <div>Your Knights Played: {gameState.players[playerId].knightsPlayed || 0}</div>
-              )}
-            </>
-          )} */}
-
-          {/* <div>yo {playerId}</div>
-          <div>yb {gameState.largestArmy.playerId}</div>
-          <div>ya {gameState.longestRoad.playerId}</div> */}
-          {/* hasLongestRoad={gameState.longestRoad?.playerId === playerId}
-          hasLargestArmy={gameState.largestArmy?.playerId === playerId} */}
-
-
-          {/* <div>{gameState.turnPhase}</div>
-          <div>hi{String(gameState.devCardRoadBuildingFirstRoadPlaced)}</div>
-          <div>{buildMode}</div>
-          <div>{myPlayer?.visibleVictoryPoints}</div>
-          <div>({myPlayer?.actualVictoryPoints})</div> */}
-
-          {/* <div style={{ marginTop: "10px" }}>
-            <strong>My Cards</strong>
-
-            {!gameState.players?.[playerId] ? (
-              <div style={{ fontSize: 12, opacity: 0.7 }}>
-                Player not found
-              </div>
-            ) : (
-              <>
-                {(!gameState.players[playerId].actionCards || Object.keys(gameState.players[playerId].actionCards).length === 0) && (
-                  <div style={{ fontSize: 12, opacity: 0.7 }}>
-                    No cards
-                  </div>
-                )}
-
-                {gameState.players[playerId].actionCards && Object.entries(gameState.players[playerId].actionCards).map(([card, count]) => (
-                  <div key={card}>
-                    {card.toUpperCase()} × {count}
-                  </div>
-                ))}
-
-                {gameState.players[playerId].devCardsBoughtThisTurn &&
-                  Object.entries(gameState.players[playerId].devCardsBoughtThisTurn).map(([card, count]) => (
-                    <div key={card}>
-                      {card.toUpperCase()} × {count}
-                    </div>
-                  ))}
-              </>
-            )}
-          </div> */}
-
-          {/* <div>
-            {gameState.players[playerId].actionCards}
-          </div> */}
-
-          {/* ===== ROBBER DEBUG ===== */}
-          {/* {gameState.robber && (
-            <div
-              style={{
-                marginTop: 12,
-                padding: 8,
-                border: "2px dashed hotpink",
-                borderRadius: 6,
-                background: "#1e1e1e",
-                color: "#fff",
-                fontSize: 12,
-              }}
-            >
-              <strong>Robber State</strong>
-
-              <div>tileId: {gameState.robber.tileId ?? "none"}</div>
-              <div>mustBePlaced: {String(gameState.robber.mustBePlaced)}</div>
-              <div>fromRolling: {String(gameState.robber.fromRolling)}</div>
-
-              <div>
-                mustDiscard:
-                <pre style={{ margin: 0 }}>
-                  {JSON.stringify(gameState.robber.mustDiscard || {}, null, 2)}
-                </pre>
-              </div>
-
-              <div>
-                playersToStealFrom:
-                <pre style={{ margin: 0 }}>
-                  {JSON.stringify(gameState.robber.playersToStealFrom || [], null, 2)}
-                </pre>
-              </div>
-
-              <p>{gameState.robber?.mustDiscard?.[playerId]?.satisfied ? "true" : "false"}</p>
-              <p>{gameState.robber?.mustDiscard?.[playerId]?.required}</p>
-
-            </div>
-          )} */}
 
           {gameState.phase === Phase.LOBBY && (
             <LobbyPanel
@@ -317,6 +180,12 @@ function App() {
               players={gameState.players}
               myPlayerId={playerId}
               hostId={gameState.hostId}
+
+              onSubmitName={(displayName) => socket.emit("setDisplayName", playerId, displayName)}
+              availableColors={gameState.availableColors}
+              onSetColor={(color) => socket.emit("setColor", playerId, color)}
+              onSetBoardLayout={(boardLayout) => socket.emit("setBoardLayout", boardLayout)}
+              onSetAllBankResources={(quantity) => socket.emit("setAllBankResources", quantity)}
             />
           )}
 
@@ -347,14 +216,12 @@ function App() {
             rollDice={() => socket.emit("rollDice")}
             phase={gameState.phase}
             turnPhase={gameState.turnPhase}
+            pairedPlayerId={gameState.pairedPlayerId}
           ></GameInfo>
 
           {/* {gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ACTION && isMyTurn && !gameState.robber?.mustBePlaced && ( */}
-          {playerActionDisplayTime && (
+          {(playerActionDisplayTime || pairedPlayerActionDisplayTime) && (
             <PlayerAction
-              // roadAction={() => setBuildMode(buildMode === BuildTypes.ROAD ? null : BuildTypes.ROAD)}
-              // houseAction={() => setBuildMode(buildMode === BuildTypes.HOUSE ? null : BuildTypes.HOUSE)}
-              // cityAction={() => setBuildMode(buildMode === BuildTypes.CITY ? null : BuildTypes.CITY)}
               roadAction={() => setBuildIntent(BuildTypes.ROAD)}
               houseAction={() => setBuildIntent(BuildTypes.HOUSE)}
               cityAction={() => setBuildIntent(BuildTypes.CITY)}
@@ -371,6 +238,7 @@ function App() {
               canAffordHouse={canAfford(Costs[BuildToCost.house], myPlayer?.resources)}
               canAffordCity={canAfford(Costs[BuildToCost.city], myPlayer?.resources)}
               canAffordDevCard={canAfford(Costs[BuildToCost.devCard], myPlayer?.resources)}
+              isMyPairedTurn={isMyPairedTurn}
             />
           )}
 
@@ -381,7 +249,7 @@ function App() {
               myPlayerId={playerId}
               myCards={gameState.players[playerId].actionCards}
               cardsBoughtThisTurn={gameState.players[playerId].devCardsBoughtThisTurn || {}}
-              canPlayCard={!gameState.players[playerId].playedDevCardThisTurn && playerActionDisplayTime}
+              canPlayCard={!gameState.players[playerId].playedDevCardThisTurn && (playerActionDisplayTime || pairedPlayerActionDisplayTime)}
               playDevCard={(cardName) => socket.emit("playDevCard", cardName, playerId)}
               hasLongestRoad={gameState.longestRoad?.playerId === playerId}
               hasLargestArmy={gameState.largestArmy?.playerId === playerId}
@@ -402,17 +270,6 @@ function App() {
               ...(debug && { border: "4px solid red" }),
             }}
           >
-            {/* <BackgroundSVG
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                zIndex: 0, // behind everything
-              }}
-            /> */}
-
             {/* HexBoard stays in the normal flow */}
             {/* <div style={{ position: "relative", zIndex: 1 }}> */}
             <HexBoard
@@ -424,21 +281,6 @@ function App() {
               players={gameState.players || {}}
               currentPlayerId={gameState.turn}
               myPlayerId={playerId}
-              // onPlaceHouse={(vertexKey) => {
-              //   console.log("Emitting placeHouse to backend:", vertexKey);
-              //   socket.emit("placeHouse", { vertexKey });
-              //   // setBuildMode(null);
-              // }}
-              // onPlaceRoad={(edgeKey) => {
-              //   console.log("Emitting placeRoad to backend:", edgeKey);
-              //   socket.emit("placeRoad", { edgeKey });
-              //   // setBuildMode(gameState.devCardRoadBuildingFirstRoadPlaced ? BuildTypes.ROAD : null);
-              // }}
-              // onPlaceCity={(vertexKey) => {
-              //   console.log("Emitting placeCity to backend:", vertexKey);
-              //   socket.emit("placeCity", { vertexKey });
-              //   // setBuildMode(null);
-              // }}
               onPlaceRoad={(edgeKey) => {
                 // Only allow if buildIntent is ROAD (prevents extra clicks)
                 if (buildIntent !== BuildTypes.ROAD && gameState.turnPhase === TurnPhase.ACTION) return;
@@ -457,13 +299,6 @@ function App() {
                   setBuildIntent(null);
                 }
               }}
-
-              // onPlaceRoad={(edgeKey) => {
-              //   socket.emit("placeRoad", { edgeKey });
-              //   if (gameState.turnPhase === TurnPhase.ACTION) {
-              //     setBuildIntent(null);
-              //   }
-              // }}
               onPlaceHouse={(vertexKey) => {
                 socket.emit("placeHouse", { vertexKey });
                 if (gameState.turnPhase === TurnPhase.ACTION) {
@@ -485,12 +320,10 @@ function App() {
               placeRobber={(id) => {
                 console.log("pressed")
                 socket.emit("placeRobber", { tileId: id })
-              }
-              }
+              }}
+              isMyPairedTurn={isMyPairedTurn}
               debug={debug}
             />
-
-            {/* </div> */}
 
             {/* Centered TradingInterface overlay */}
             {inTradingInterface && (
@@ -521,13 +354,12 @@ function App() {
                     socket.emit("bankTrade", { offerList: offerList, wantList: wantList });
                   }}
                   closeInterface={() => setInTradingInterface(false)}
+                  isMyPairedTurn={isMyPairedTurn}
                 />
               </div>
             )}
 
             {gameState.robber?.step === "discarding" &&
-              // gameState.robber.mustDiscard?.[playerId] &&
-              // !gameState.robber.mustDiscard[playerId]?.satisfied &&
               (
                 <div
                   style={{
@@ -548,8 +380,6 @@ function App() {
                     discardCount={gameState.robber?.mustDiscard?.[playerId]?.required}
                     onSubmitDiscard={(discardList) => {
                       console.log("(app.js) discardList:", discardList); // debug
-                      // submitDiscard
-                      // socket.emit("bankTrade", { offerList: offerList, wantList: wantList });
                       socket.emit("submitDiscard", { discardList: discardList });
                     }}
 
@@ -672,22 +502,60 @@ function App() {
 
           {/* ===== RIGHT PANEL ===== */}
 
-          <p>right container</p>
-          <p>Dummy Logs</p>
-          <p>Turn X: Colour/Name</p>
-          <p>roll: 3 + 2 = 5</p>
-          <p>trade:</p>
-          <p>red -{'>'} 2 wood</p>
-          <p>1 ore {'<'}- green</p>
-          <p>action: built a house</p>
-          <p>action: built a road</p>
-          <p>action: built a road</p>
-          <p><strong>achieved longest road.</strong></p>
-          <p>trade:</p>
-          <p>red -{'>'} 4 wood</p>
-          <p>1 ore {'<'}- Bank</p>
-          <p>action: built a city</p>
-          <p>{gameState.turn}</p>
+          <div>
+            {/* <div style={{ flex: 2, maxWidth: '15%', display: 'flex', flexDirection: 'column' }}> */}
+            <h3 style={{ marginBottom: 8 }}>Turn Log</h3>
+            {/* <ul style={{ listStyleType: "none", paddingLeft: 0 }}> */}
+            {/* Scrollable area */}
+            <div
+              style={{
+                overflowY: 'auto',
+                maxHeight: '80vh',   // 👈 adjust as needed
+                paddingRight: 4,     // avoids scrollbar overlap
+                border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
+                borderRadius: theme.styling.defaultRadius,
+              }}
+            >
+              {gameState.turnLogs?.map((turn) => (
+                <div style={{
+                  border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
+                  borderRadius: theme.styling.defaultRadius,
+                  padding: theme.styling.componentPadding,
+                  margin: theme.styling.componentMargin,
+                }}>
+                  <div>
+                    <span>Turn {turn.turn}</span>
+                  </div>
+                  <div>
+                    <span>Player: {turn.displayName}</span>
+                  </div>
+                  {turn.roll && (
+                    <div>
+                      <span>Roll: {turn.roll}</span>
+                    </div>
+                  )}
+
+                  {/* Display all actions */}
+                  {turn.actions && turn.actions.length > 0 && (
+                    <div style={{ marginTop: 4 }}>
+                      {/* <strong>Actions:</strong> */}
+                      <ul style={{ paddingLeft: "16px", marginTop: "4px" }}>
+                        {turn.actions.map((action, i) => (
+                          <li key={i}>{action}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+
+                </div>
+                // </li>
+              ))}
+              {/* 👇 invisible anchor */}
+              <div ref={bottomRef} />
+            </div>
+            {/* </ul> */}
+          </div>
 
           <div>
             <h3>Board Scale</h3>

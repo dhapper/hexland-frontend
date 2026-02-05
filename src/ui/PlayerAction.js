@@ -16,6 +16,7 @@ export default function PlayerAction({
     canAffordHouse,
     canAffordCity,
     canAffordDevCard,
+    // isMyPairedTurn
 }) {
     return (
 
