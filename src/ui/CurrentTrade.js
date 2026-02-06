@@ -2,6 +2,8 @@
 import theme from "../ui/theme";
 import ResourceBadge from "./ResourceBadge";
 import { truncate } from "../utils/stringUtils";
+import DefaultTextButton from "./DefaultTextButton";
+import { PLAYER_UI_COLORS } from "../utils/playerUIColorMap";
 
 export default function CurrentTrade({
     myPlayerId,
@@ -87,70 +89,53 @@ export default function CurrentTrade({
                             {Object.keys(players)
                                 .filter((pid) => pid !== myPlayerId)
                                 .map((pid) => (
-                                    <button
-                                        key={pid}
-                                        style={{
-                                            padding: "6px 12px",
-                                            backgroundColor: responses?.[pid] ? players[pid].color : "grey",
-                                            color: "white",
-                                            border: "none",
-                                            borderRadius: "4px",
-                                            cursor: responses?.[pid] ? "pointer" : "not-allowed", // leave unclickable for now
-                                        }}
-                                        onClick={() => confirmTrade(pid)}
-                                    >
-                                        {/* {players[pid].name || pid} */}
-                                        {truncate(pid)}
-                                    
-                                    </button>
+                                    <>
+                                        {/* <button
+                                            key={pid}
+                                            style={{
+                                                padding: "6px 12px",
+                                                backgroundColor: responses?.[pid] ? players[pid].color : "grey",
+                                                color: "white",
+                                                border: "none",
+                                                borderRadius: "4px",
+                                                cursor: responses?.[pid] ? "pointer" : "not-allowed", // leave unclickable for now
+                                            }}
+                                            onClick={() => confirmTrade(pid)}
+                                        >
+                                            {players[pid].name || pid}
+                                            {truncate(pid)}
+
+                                        </button> */}
+                                        <DefaultTextButton
+                                            onClick={() => confirmTrade(pid)}
+                                            text={players[pid].displayName}
+                                            backgroundColor={PLAYER_UI_COLORS[players[pid].color].bgColor}
+                                            disabled={!responses?.[pid]}
+                                        />
+                                    </>
                                 ))}
                         </div>
-
                         {/* Close trade button below the row */}
-                        <button
+                        <DefaultTextButton
                             onClick={closeTrade}
-                            style={{
-                                padding: "6px 12px",
-                                backgroundColor: "red",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            Close Trade
-                        </button>
+                            text="Close Trade"
+                            backgroundColor={theme.colors.redButton}
+                        />
                     </>
                 ) : (
                     // Not initiator: Accept / Decline
                     <>
-                        <button
+                        <DefaultTextButton
                             onClick={onAccept}
-                            style={{
-                                padding: "6px 12px",
-                                backgroundColor: canAccept ? "green" : "grey",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: canAccept ? "pointer" : "not-allowed",
-                            }}
                             disabled={!canAccept}
-                        >
-                            Accept
-                        </button>
-                        <button
+                            text="Accept"
+                            backgroundColor={theme.colors.blueButton}
+                        />
+                        <DefaultTextButton
                             onClick={onDecline}
-                            style={{
-                                // padding: "6px 12px",
-                                // backgroundColor: "red",
-                                // color: "white",
-                                // border: "none",
-                                // borderRadius: "4px",
-                                cursor: "pointer",
-                            }}
-                        >
-                            Decline
-                        </button>
+                            text="Decline"
+                            backgroundColor={theme.colors.redButton}
+                        />
                     </>
                 )}
             </div>

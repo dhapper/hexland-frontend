@@ -3,6 +3,7 @@ import { useState } from "react";
 import theme from "../ui/theme";
 import ResourceBadge from "./ResourceBadge";
 import PortBadge from "./PortBadge";
+import DefaultTextButton from "./DefaultTextButton";
 
 export default function TradingInterface({
     resources,
@@ -170,30 +171,24 @@ export default function TradingInterface({
             <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
 
                 {!isMyPairedTurn && (
-                    <button
+                    <DefaultTextButton
                         onClick={() => {
                             onPlayerTrade(offerList, wantList);
                             resetTradeAmounts();
                         }}
                         disabled={!offerList.length || !wantList.length}
-                    >
-                        Player Trade
-                    </button>
+                        text={"Player Trade"}
+                    />
                 )}
 
-                <button
+                <DefaultTextButton
                     onClick={() => {
                         onBankTrade(offerList, wantList);
                         resetTradeAmounts();
                     }}
                     disabled={!isValidBankTrade}
-                    style={{
-                        opacity: isValidBankTrade ? 1 : 0.4,
-                        cursor: isValidBankTrade ? "pointer" : "not-allowed",
-                    }}
-                >
-                    Bank / Port Trade
-                </button>
+                    text={"Bank / Port Trade"}
+                />
             </div>
 
             {/* Ports */}
@@ -214,10 +209,12 @@ export default function TradingInterface({
                 ))}
             </div>
 
-            <div style={{ display: "flex", gap: "16px", marginTop: "16px", backgroundColor: "#e98080" }}>
-                <button onClick={closeInterface}>
-                    Close
-                </button>
+            <div style={{ display: "flex", gap: "16px", marginTop: "16px" }}>
+                <DefaultTextButton
+                    onClick={closeInterface}
+                    text="Close"
+                    backgroundColor={theme.colors.redButton}
+                />
             </div>
         </div>
     );

@@ -11,7 +11,7 @@ export default function Edge({ v1, v2, placed, active, playerColor, clickColor, 
           x2={v2.x}
           y2={v2.y}
           stroke="#000"           // black outline
-          strokeWidth="8"         // slightly thicker than main line
+          strokeWidth="11"         // slightly thicker than main line
           strokeLinecap="round"
         />
         {/* actual road color */}

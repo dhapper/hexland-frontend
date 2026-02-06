@@ -9,7 +9,7 @@ export default function Vertex({ x, y, size = 10, fillColor = "#fff", clickable 
       r={size}
       fill={fillColor}          // <-- use fillColor prop
       stroke="#000"
-      strokeWidth="1"
+      strokeWidth="2"
       style={{ cursor: clickable ? "pointer" : "default" }}
       onClick={clickable ? onClick : undefined}  // <-- only clickable if allowed
     />

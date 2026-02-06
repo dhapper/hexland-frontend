@@ -25,10 +25,10 @@ export default function Robber({ x, y, size = 24, color = "#252525", placeRobber
         width={size}
         height={size}
         style={{
-          filter: "drop-shadow(2px 2px 2px rgba(0,0,0,0.75))"
+          filter: "drop-shadow(2px 2px 2px rgba(0,0,0,1))"
         }}
-        stroke={color}      // border color
-        strokeWidth={1}
+        stroke="black"      // border color
+        strokeWidth={1.5}
       />
     </g>
   );

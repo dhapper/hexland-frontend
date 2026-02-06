@@ -4,6 +4,7 @@ import theme from "./theme";
 import { truncate } from "../utils/stringUtils";
 import { Phase } from "../utils/constants";
 import Dice from "./Dice";
+import DefaultTextButton from "./DefaultTextButton";
 
 export default function SetupPanel(props) {
     const {
@@ -94,22 +95,26 @@ export default function SetupPanel(props) {
                         </div>
 
                         {/* ACTION / DICE AREA */}
-                        <div style={{ minWidth: 180 }}>
+                        <div style={{}}>
                             {/* MY PLAYER */}
                             {isMe &&
                                 phase === Phase.ROLL_FOR_TURN_ORDER &&
                                 !turnOrderRolls?.[myPlayerId] &&
                                 !dice && (
-                                    <button onClick={turnOrderRollFunction}>
-                                        Roll Dice for Turn Order
-                                    </button>
+                                    // <button onClick={turnOrderRollFunction}>
+                                    //     Roll Dice for Turn Order
+                                    // </button>
+                                    <DefaultTextButton
+                                        onClick={turnOrderRollFunction}
+                                        text={"ROLL"}
+                                    />
                                 )}
 
                             {/* SHOW DICE (ME OR OTHERS) */}
                             {dice && (
-                                <p>
+                                <div>
                                     <Dice value={dice[0]} /> <Dice value={dice[1]} />
-                                </p>
+                                </div>
                             )}
                         </div>
                     </div>

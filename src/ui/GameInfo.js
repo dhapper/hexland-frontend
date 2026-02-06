@@ -3,6 +3,7 @@ import Dice from "./Dice";
 import theme from "../ui/theme";
 import ResourceBadge from "./ResourceBadge";
 import { Phase, TurnPhase } from "../utils/constants";
+import DefaultTextButton from "./DefaultTextButton";
 
 export default function GameInfo({
     turnOrder = [],
@@ -16,7 +17,9 @@ export default function GameInfo({
     rollDice,
     phase,
     turnPhase,
-    pairedPlayerId
+    pairedPlayerId,
+    onExitToLobby,
+    isHost
 }) {
 
     return (
@@ -29,6 +32,21 @@ export default function GameInfo({
                 margin: theme.styling.componentMargin
             }}
         >
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    marginBottom: "10px",
+                }}
+            >
+                {isHost && (
+                    <DefaultTextButton
+                        text="Back To Lobby"
+                        onClick={() => onExitToLobby()}
+                        backgroundColor={theme.colors.redButton}
+                    />
+                )}
+            </div>
 
             {phase !== Phase.LOBBY && (
 
@@ -123,20 +141,35 @@ export default function GameInfo({
                 ))}
             </div>
 
-            {/* dice roll */}
-            {rollTime && (
-                <button
-                    onClick={rollDice}
-                >Roll The Dice</button>
-            )}
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    margin: "10px",
+                }}
+            >
 
-            {lastRoll[0] && (
-                <div style={{ color: theme.colors.lightAccent, textShadow: "0px 0px 4px black" }}>
-                    <strong>
-                        Last roll: <Dice value={lastRoll[0]} /> <Dice value={lastRoll[1]} />
-                    </strong>
-                </div>
-            )}
+                {/* dice roll */}
+                {rollTime && (
+                    // <button
+                    //     onClick={rollDice}
+                    // >Roll The Dice</button>
+                    <DefaultTextButton
+                        text="ROLL"
+                        onClick={rollDice}
+                        backgroundColor={theme.colors.blueButton}
+                    />
+                )}
+
+                {lastRoll[0] && (
+                    <div style={{ color: theme.colors.lightAccent, textShadow: "0px 0px 4px black", fontWeight: "400", fontSize: "20px" }}>
+                        <strong>
+                            Last roll: <Dice value={lastRoll[0]} /> <Dice value={lastRoll[1]} />
+                        </strong>
+                    </div>
+                )}
+
+            </div>
 
         </div>
     );

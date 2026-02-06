@@ -1,6 +1,7 @@
 // src/ui/PlayerAction.js
-import React from "react";
+import React, { useState } from "react";
 import theme from "./theme";
+import DefaultTextButton from "./DefaultTextButton";
 
 export default function PlayerAction({
     roadAction,
@@ -18,6 +19,9 @@ export default function PlayerAction({
     canAffordDevCard,
     // isMyPairedTurn
 }) {
+
+    const [hovered, setHovered] = useState(false);
+
     return (
 
         <div
@@ -25,59 +29,58 @@ export default function PlayerAction({
                 background: theme.colors.componentBackground,
                 border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
                 borderRadius: theme.styling.defaultRadius,
-                padding: theme.styling.componentPadding,
+                // padding: theme.styling.componentPadding,
                 margin: theme.styling.componentMargin,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
             }}
         >
-            <div style={{}}>
-                <button
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "12px",
+                    flexWrap: "wrap",
+                    margin: "10px"
+                }}
+            >
+
+                <DefaultTextButton
+                    text="Road"
                     onClick={roadAction}
                     disabled={!canAffordRoad}
-                    style={{
-                        cursor: canAffordRoad ? "pointer" : "default"
-                    }}
-                >Road</button>
-                <button
+                />
+
+                <DefaultTextButton
+                    text="House"
                     onClick={houseAction}
                     disabled={!canAffordHouse}
-                    style={{
-                        cursor: canAffordHouse ? "pointer" : "default"
-                    }}
-                >House</button>
-                <button
+                />
+
+                <DefaultTextButton
+                    text="City"
                     onClick={cityAction}
                     disabled={!canAffordCity}
-                    style={{
-                        cursor: canAffordCity ? "pointer" : "default"
-                    }}
-                >City</button>
-                <button
+                />
+
+                <DefaultTextButton
+                    text="Card"
                     onClick={() => buildCard()}
                     disabled={!canAffordDevCard}
-                    style={{
-                        cursor: canAffordDevCard ? "pointer" : "default"
-                    }}
-                >Card</button>
-                <button
+                />
+
+                <DefaultTextButton
+                    text="Trade"
                     onClick={tradeAction}
-                    style={{
-                        cursor: "pointer"
-                    }}
-                >Trade</button>
-                <button
+                />
+
+                <DefaultTextButton
+                    text="End Turn"
                     onClick={endTurnAction}
-                    style={{
-                        cursor: "pointer"
-                    }}
-                >End Turn</button>
-                {/* { isHost && (
-                    <button
-                        onClick={exitLobbyAction}
-                    >Exit to Lobby</button>
-                )} */}
+                    backgroundColor={theme.colors.redButton}
+                />
+
             </div>
         </div>
     );

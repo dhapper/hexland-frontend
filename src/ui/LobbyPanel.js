@@ -18,7 +18,7 @@ export default function LobbyPanel({
   availableColors = [],
   onSetColor,
   onSetBoardLayout,
-  onSetAllBankResources
+  onSetAllBankResources,
 }) {
   const [inputValue, setInputValue] = useState("");
 
@@ -45,11 +45,13 @@ export default function LobbyPanel({
         margin: theme.styling.componentMargin,
       }}
     >
+      
       {Object.entries(players).map(([id, player]) => {
         const isMe = id === myPlayerId;
         const isHostPlayer = id === hostId;
 
         return (
+          
           <div
             key={id}
             style={{

@@ -17,6 +17,10 @@ import InventionInterface from "./ui/InventionInterface";
 import { ReactComponent as BackgroundSVG } from "./assets/icons/waves.svg";
 import { canAfford } from "./utils/calculator";
 import { Costs, BuildToCost } from "./utils/constants";
+import GameOverPopUp from "./ui/GameOverPopUp";
+import boardBg from './assets/waterbg3.jpeg';
+import { PLAYER_UI_COLORS } from "./utils/playerUIColorMap";
+
 
 const socket = io(process.env.REACT_APP_BACKEND_URL);
 
@@ -39,6 +43,7 @@ function App() {
   const isLobby = gameState.phase === Phase.LOBBY;
   const isMyTurn = playerId === gameState.turn;
   const isMyPairedTurn = playerId === gameState.pairedPlayerId;
+  const isGameOver = gameState.gameOver;
   const myPlayer = gameState.players[playerId];
 
   const myResources = gameState.players?.[playerId]?.resources || {};
@@ -148,26 +153,14 @@ function App() {
     <div style={{ background: "#524f4f", height: "100vh" }}>
 
       <div style={{ display: 'flex', height: '100vh' }}>
-        <div style={{ flex: 1, maxWidth: '25%', borderRight: `4px solid ${theme.colors.lightAccent}` }}>
+        <div style={{
+          flex: 1,
+          maxWidth: '20%',
+          borderRight: `4px solid ${theme.colors.lightAccent}`,
+          background: theme.colors.panelBackground
+        }}>
 
           {/* ===== LEFT PANEL ===== */}
-
-          {isLobby === false && isHost && (
-            <button onClick={() => socket.emit("exitToLobby")}>
-              Exit to Lobby
-            </button>
-          )}
-
-          <div>
-            isMyPairedTurn: {JSON.stringify(isMyPairedTurn)}
-          </div>
-          <div>
-            buildMode: {buildMode}
-          </div>
-          <div>
-            buildIntent: {buildIntent}
-          </div>
-
 
           {gameState.phase === Phase.LOBBY && (
             <LobbyPanel
@@ -217,6 +210,8 @@ function App() {
             phase={gameState.phase}
             turnPhase={gameState.turnPhase}
             pairedPlayerId={gameState.pairedPlayerId}
+            onExitToLobby={() => socket.emit("exitToLobby")}
+            isHost={isHost}
           ></GameInfo>
 
           {/* {gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ACTION && isMyTurn && !gameState.robber?.mustBePlaced && ( */}
@@ -259,7 +254,16 @@ function App() {
         </div>
         <div
           ref={boardRef}
-          style={{ flex: 2, maxWidth: '60%', overflow: 'hidden', backgroundColor: "#212063" }}
+          style={{
+            flex: 2,
+            maxWidth: '60%',
+            overflow: 'hidden',
+            backgroundColor: "#212063",
+            backgroundImage: `url(${boardBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
         >
 
           {/* ===== CENTRE PANEL ===== */}
@@ -495,10 +499,36 @@ function App() {
                 />
               </div>
             )}
+
+            {isGameOver && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0,0,0,0.3)",
+                  zIndex: 10,
+                }}
+              >
+                <GameOverPopUp
+                  winnerDisplayName={gameState.players[gameState.winnerId].displayName}
+                  isHost={isHost}
+                  onBackToLobby={() => {
+                    socket.emit("exitToLobby")
+                    socket.emit("resetGame")
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
 
-        <div style={{ flex: 2, maxWidth: '15%' }}>
+        <div style={{ flex: 2, maxWidth: '20%' }}>
 
           {/* ===== RIGHT PANEL ===== */}
 
@@ -522,18 +552,35 @@ function App() {
                   borderRadius: theme.styling.defaultRadius,
                   padding: theme.styling.componentPadding,
                   margin: theme.styling.componentMargin,
+
+                  background: PLAYER_UI_COLORS[gameState.players[turn.playerId].color].bgColor,
+                  borderColor: PLAYER_UI_COLORS[gameState.players[turn.playerId].color].borderColor,
+
                 }}>
-                  <div>
+                  {/* Top row: Turn number (left) and Roll (right) */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontSize: "18px", // same font size for turn + roll
+                      fontWeight: "500",
+                      marginBottom: "4px", // small gap to player name below
+                    }}
+                  >
                     <span>Turn {turn.turn}</span>
+                    {turn.roll && <span>Roll: {turn.roll}</span>}
                   </div>
-                  <div>
-                    <span>Player: {turn.displayName}</span>
+
+                  {/* Player name below */}
+                  <div
+                    style={{
+                      fontSize: "22px", // slightly larger
+                      fontWeight: "600",
+                    }}
+                  >
+                    {turn.displayName}
                   </div>
-                  {turn.roll && (
-                    <div>
-                      <span>Roll: {turn.roll}</span>
-                    </div>
-                  )}
 
                   {/* Display all actions */}
                   {turn.actions && turn.actions.length > 0 && (
