@@ -211,11 +211,11 @@ export default function HexBoard({
                   />
 
                   <defs>
-                    <filter id={`textShadow-${i}`} width="300%" height="300%">
-                      <feDropShadow dx="1" dy="1" stdDeviation="2" floodColor="black" floodOpacity="0.75" />
-                      <feDropShadow dx="-1" dy="-1" stdDeviation="2" floodColor="black" floodOpacity="0.75" />
-                      <feDropShadow dx="1" dy="-1" stdDeviation="2" floodColor="black" floodOpacity="0.75" />
-                      <feDropShadow dx="-1" dy="1" stdDeviation="2" floodColor="black" floodOpacity="0.75" />
+                    <filter id={`textShadow-${i}`} width="300%" height="300%" x="-100%" y="-100%">
+                      <feDropShadow dx="1" dy="1" stdDeviation="2" floodColor="black" floodOpacity="0.5" />
+                      <feDropShadow dx="-1" dy="-1" stdDeviation="2" floodColor="black" floodOpacity="0.5" />
+                      <feDropShadow dx="1" dy="-1" stdDeviation="2" floodColor="black" floodOpacity="0.5" />
+                      <feDropShadow dx="-1" dy="1" stdDeviation="2" floodColor="black" floodOpacity="0.5" />
                     </filter>
                   </defs>
 

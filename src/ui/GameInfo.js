@@ -4,6 +4,7 @@ import theme from "../ui/theme";
 import ResourceBadge from "./ResourceBadge";
 import { Phase, TurnPhase } from "../utils/constants";
 import DefaultTextButton from "./DefaultTextButton";
+import { PLAYER_UI_COLORS } from "../utils/playerUIColorMap";
 
 export default function GameInfo({
     turnOrder = [],
@@ -39,7 +40,7 @@ export default function GameInfo({
                     marginBottom: "10px",
                 }}
             >
-                {isHost && (
+                {isHost && phase !== Phase.LOBBY && (
                     <DefaultTextButton
                         text="Back To Lobby"
                         onClick={() => onExitToLobby()}
@@ -68,22 +69,23 @@ export default function GameInfo({
                             style={{
                                 marginBottom: 10,
                                 padding: 7,
-                                backgroundColor: player.color,
-                                color: "#fff",
+                                backgroundColor: PLAYER_UI_COLORS[player.color].bgColor,
+                                color: "#000000",
                                 borderRadius: theme.styling.defaultRadius,
                                 border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
+                                borderColor: PLAYER_UI_COLORS[player.color].borderColor,
                                 position: "relative",
                                 minHeight: 50,
                             }}
                         >
                             {/* Top-right indicator */}
-                            <div style={{ position: "absolute", top: 8, right: 8 }}>
+                            <div style={{ position: "absolute", top: 8, right: 8, fontWeight: "500" }}>
                                 {isHost ? "✪" : isMe ? "YOU" : ""}
                             </div>
 
                             {/* Player name */}
-                            <strong style={{ textShadow: "0px 0px 4px black" }}>
-                                {truncate(id)}
+                            <strong style={{ }}>
+                                {player.displayName}
                             </strong>
 
                             {/* Current turn */}
@@ -91,8 +93,9 @@ export default function GameInfo({
                                 <div style={{
                                     fontSize: "0.9em",
                                     fontStyle: "italic",
+                                    fontWeight: "500",
                                     marginTop: 4,
-                                    textShadow: "0px 0px 4px black"
+                                    // textShadow: "0px 0px 4px black"
                                 }}>
                                     current turn
                                 </div>
@@ -104,7 +107,8 @@ export default function GameInfo({
                                     fontSize: "0.9em",
                                     fontStyle: "italic",
                                     marginTop: 4,
-                                    textShadow: "0px 0px 4px black"
+                                    fontWeight: "500",
+                                    // textShadow: "0px 0px 4px black"
                                 }}>
                                     paired player
                                 </div>
@@ -116,7 +120,7 @@ export default function GameInfo({
                                 bottom: 8,
                                 right: 8,
                                 fontWeight: "bold",
-                                textShadow: "0px 0px 4px black"
+                                // textShadow: "0px 0px 4px black"
                             }}>
                                 {vpText}
                             </div>

@@ -153,12 +153,21 @@ function App() {
     <div style={{ background: "#524f4f", height: "100vh" }}>
 
       <div style={{ display: 'flex', height: '100vh' }}>
-        <div style={{
-          flex: 1,
-          maxWidth: '20%',
-          borderRight: `4px solid ${theme.colors.lightAccent}`,
-          background: theme.colors.panelBackground
-        }}>
+        <div
+          style={{
+            flex: 1,
+            maxWidth: "20%",
+            borderRight: `4px solid ${theme.colors.lightAccent}`,
+            background: theme.colors.panelBackground,
+
+            display: "flex",
+            flexDirection: "column",
+
+            height: "100vh",
+            overflowY: "auto",   // 👈 THIS is the key
+          }}
+        >
+
 
           {/* ===== LEFT PANEL ===== */}
 
@@ -179,6 +188,10 @@ function App() {
               onSetColor={(color) => socket.emit("setColor", playerId, color)}
               onSetBoardLayout={(boardLayout) => socket.emit("setBoardLayout", boardLayout)}
               onSetAllBankResources={(quantity) => socket.emit("setAllBankResources", quantity)}
+              onEnabledPairedPlayer={(enabled) => socket.emit("setEnabledPairedPlayer", enabled)}
+              onSetDevCards={(useExpansion) => socket.emit("setDevCards", useExpansion)}
+              onSetRobberMax={(robberMaxCards) => socket.emit("setRobberMaxCards", robberMaxCards)}
+              robberMaxCardsValue={gameState.robberMaxCards}
             />
           )}
 
@@ -528,83 +541,114 @@ function App() {
           </div>
         </div>
 
-        <div style={{ flex: 2, maxWidth: '20%' }}>
+        <div
+          style={{
+            flex: 2,
+            maxWidth: "20%",
+            borderLeft: `4px solid ${theme.colors.lightAccent}`,
+            background: theme.colors.panelBackground,
 
+            display: "flex",
+            flexDirection: "column",
+            height: "100vh",
+          }}
+        >
           {/* ===== RIGHT PANEL ===== */}
 
-          <div>
-            {/* <div style={{ flex: 2, maxWidth: '15%', display: 'flex', flexDirection: 'column' }}> */}
-            <h3 style={{ marginBottom: 8 }}>Turn Log</h3>
-            {/* <ul style={{ listStyleType: "none", paddingLeft: 0 }}> */}
-            {/* Scrollable area */}
-            <div
-              style={{
-                overflowY: 'auto',
-                maxHeight: '80vh',   // 👈 adjust as needed
-                paddingRight: 4,     // avoids scrollbar overlap
+          <div
+            style={{
+              flex: 1,             // takes remaining space
+              overflowY: "auto",   // scrolls if content is tall
+              paddingRight: 4,
+              border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
+              borderRadius: theme.styling.defaultRadius,
+              padding: theme.styling.componentPadding,
+              margin: theme.styling.componentMargin,
+              backgroundColor: theme.colors.componentBackground,
+            }}
+          >
+            {gameState.turnLogs?.map((turn) => (
+              <div style={{
                 border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
                 borderRadius: theme.styling.defaultRadius,
-              }}
-            >
-              {gameState.turnLogs?.map((turn) => (
-                <div style={{
-                  border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
-                  borderRadius: theme.styling.defaultRadius,
-                  padding: theme.styling.componentPadding,
-                  margin: theme.styling.componentMargin,
+                padding: theme.styling.componentPadding,
+                margin: theme.styling.componentMargin,
 
-                  background: PLAYER_UI_COLORS[gameState.players[turn.playerId].color].bgColor,
-                  borderColor: PLAYER_UI_COLORS[gameState.players[turn.playerId].color].borderColor,
+                background: PLAYER_UI_COLORS[gameState.players[turn.playerId].color].bgColor,
+                borderColor: PLAYER_UI_COLORS[gameState.players[turn.playerId].color].borderColor,
 
-                }}>
-                  {/* Top row: Turn number (left) and Roll (right) */}
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      fontSize: "18px", // same font size for turn + roll
-                      fontWeight: "500",
-                      marginBottom: "4px", // small gap to player name below
-                    }}
-                  >
-                    <span>Turn {turn.turn}</span>
-                    {turn.roll && <span>Roll: {turn.roll}</span>}
-                  </div>
+              }}>
+                {/* Top row: Turn number (left) and Roll (right) */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    fontSize: "18px", // same font size for turn + roll
+                    fontWeight: "500",
+                    marginBottom: "4px", // small gap to player name below
+                  }}
+                >
+                  <span>Turn {turn.turn}</span>
+                  {turn.roll && <span>Roll: {turn.roll}</span>}
+                </div>
 
-                  {/* Player name below */}
-                  <div
-                    style={{
-                      fontSize: "22px", // slightly larger
-                      fontWeight: "600",
-                    }}
-                  >
-                    {turn.displayName}
-                  </div>
+                {/* Player name below */}
+                <div
+                  style={{
+                    fontSize: "22px", // slightly larger
+                    fontWeight: "600",
+                  }}
+                >
+                  {turn.displayName}
+                </div>
 
-                  {/* Display all actions */}
+                {/* Display all actions */}
+                <div
+                  style={{
+                    // paddingLeft: "16px",
+                    // marginTop: "4px",
+                    whiteSpace: "pre-wrap",
+                    wordBreak: "break-word",
+                  }}
+                >
                   {turn.actions && turn.actions.length > 0 && (
                     <div style={{ marginTop: 4 }}>
                       {/* <strong>Actions:</strong> */}
-                      <ul style={{ paddingLeft: "16px", marginTop: "4px" }}>
+                      <div style={{ paddingLeft: "16px", marginTop: "4px" }}>
                         {turn.actions.map((action, i) => (
-                          <li key={i}>{action}</li>
+                          <div key={i}>{action}</div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   )}
-
-
                 </div>
-                // </li>
-              ))}
-              {/* 👇 invisible anchor */}
-              <div ref={bottomRef} />
-            </div>
+
+
+              </div>
+              // </li>
+            ))}
+
+            {/* 👇 invisible anchor */}
+            <div ref={bottomRef} />
+            {/* </div> */}
             {/* </ul> */}
           </div>
+          <div
+            style={{
+              color: theme.colors.lightAccent,
+              paddingRight: 4,
+              border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
+              borderRadius: theme.styling.defaultRadius,
+              margin: theme.styling.componentMargin,
+              backgroundColor: theme.colors.componentBackground,
 
-          <div>
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+            }}
+          >
             <h3>Board Scale</h3>
             <input
               type="range"
@@ -614,8 +658,9 @@ function App() {
               value={boardScale}
               onChange={(e) => setBoardScale(parseFloat(e.target.value))}
             />
-            <p>{Math.round(boardScale * 100)}%</p>
+            <div style={{ marginBottom: "10px" }}>{Math.round(boardScale * 100)}%</div>
           </div>
+
         </div>
       </div>
 
