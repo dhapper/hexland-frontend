@@ -1,6 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
+import theme from "../ui/theme";
 
 export default function Edge({ v1, v2, placed, active, playerColor, clickColor, onClick }) {
+
+  const [hovered, setHovered] = useState(false);
+
   if (placed) {
     return (
       <>
@@ -34,16 +38,25 @@ export default function Edge({ v1, v2, placed, active, playerColor, clickColor, 
   const midX = (v1.x + v2.x) / 2;
   const midY = (v1.y + v2.y) / 2;
 
+  const size = 12;
+
   return (
     <circle
       cx={midX}
       cy={midY}
-      r={12}
-      fill={clickColor}
+      r={hovered ? size * 1.2 : size}
+      fill={hovered ? theme.colors.greenHover : clickColor}
       stroke="#000"
-      strokeWidth={1}
-      style={{ cursor: "pointer" }}
+      strokeWidth={2}
       onClick={onClick}
+
+      style={{
+        cursor: "pointer",
+        transition: "all 0.3s ease",
+      }}
+
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     />
   );
 }

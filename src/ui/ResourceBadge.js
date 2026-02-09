@@ -38,7 +38,8 @@ export default function ResourceBadge({ resource, quantity, size = 80 }) {
         alignItems: "center",
         position: "relative",
         margin: "4px",
-        border: `4px solid #000000`,
+        border: `4px solid`,
+        borderColor: quantity <= 0 ? "gray" : "black",
         overflow: "visible",
         backgroundColor: color, // fallback if image doesn't load
       }}
@@ -87,12 +88,14 @@ export default function ResourceBadge({ resource, quantity, size = 80 }) {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            color: "black",
+            color: quantity === 0 ? "gray" : "black",
+            backgroundColor: quantity === 0 ? "white" : theme.colors.lightAccent,
             fontWeight: "bold",
             fontSize: size * 0.2,
             boxShadow: "0 0 2px black",
             padding: "0px",
-            border: `4px solid #000000`,
+            border: `4px solid`,
+            borderColor: quantity === 0 ? "gray" : "black",
             overflow: "visible",
             zIndex: 2,
           }}

@@ -1,6 +1,7 @@
 // src/components/PortBadge.js
 import React from "react";
 import portBg from "../assets/portbg.jpg";
+import theme from "./theme";
 
 export default function PortBadge({
   resource = "Any",
@@ -26,8 +27,8 @@ export default function PortBadge({
         width: size,
         height: size,
         borderRadius: "50%", // circular
-        backgroundColor,
-        backgroundImage: `url(${portBg})`,
+        backgroundColor: theme.colors.dock,
+        // backgroundImage: `url(${portBg})`,
         backgroundSize: "cover",
         backgroundPosition: "center",
         color: textColor,

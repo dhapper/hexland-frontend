@@ -55,8 +55,8 @@ export default function DevCard({ cardType, quantity = 1, size = 80, playDevCard
                 margin: "4px",
                 overflow: "visible",
                 cursor: canUseThisTurn ? "pointer" : "not-allowed",
-                transition: canUseThisTurn ? "background-color 0.15s ease, transform 0.1s ease" : "none",
-                transform: canUseThisTurn && hovered ? "scale(1.05)" : "scale(1)",
+                transition: canUseThisTurn ? "background-color 0.2s ease, transform 0.2s ease" : "none",
+                transform: canUseThisTurn && hovered ? "scale(1.2)" : "scale(1)",
             }}
         >
             <IconComponent

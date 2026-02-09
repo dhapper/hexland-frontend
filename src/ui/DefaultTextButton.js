@@ -1,5 +1,5 @@
 // src/components/Dice.js
-import React, { useState} from "react";
+import React, { useState } from "react";
 import theme from "./theme";
 
 export default function DefaultTextButton({

@@ -1,17 +1,32 @@
 // components/Vertex.js
-import React from "react";
+import React, { useState } from "react";
+import theme from "../ui/theme";
 
 export default function Vertex({ x, y, size = 10, fillColor = "#fff", clickable = false, onClick }) {
+
+  const [hovered, setHovered] = useState(false);
+
   return (
     <circle
       cx={x}
       cy={y}
-      r={size}
-      fill={fillColor}          // <-- use fillColor prop
+      r={hovered ? size * 1.2 : size}
+      fill={hovered ? theme.colors.greenHover : fillColor}         // <-- use fillColor prop
       stroke="#000"
       strokeWidth="2"
-      style={{ cursor: clickable ? "pointer" : "default" }}
-      onClick={clickable ? onClick : undefined}  // <-- only clickable if allowed
+      // onClick={clickable ? onClick : undefined}  // <-- only clickable if allowed
+      onClick={(e) => {
+        if (!clickable) return;
+        setHovered(false);   // 👈 reset hover on click
+        onClick?.(e);
+      }}
+      style={{
+        cursor: clickable ? "pointer" : "default",
+        transition: "all 0.3s ease",
+      }}
+
+      onMouseEnter={() => clickable && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     />
   );
 }

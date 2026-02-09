@@ -8,7 +8,10 @@ const theme = {
     lightAccent: "#ffc165",
     componentBackground: "#462030",
     panelBackground: "#1a0e0e",
+
     sand: "#ffc165",
+    dock: "#68392e",
+    dockAccent: "#4b2523",
 
     greenHover: "#a2ec7c",
     redButton: "#ec7c7c",
@@ -17,6 +20,7 @@ const theme = {
     knightCard: "#957cce",
     vpCard: "#e79965",
     altCard: "#568bd1"
+
 
     // primary: "#ff6f61",      // main accent
     // darkAccent: "#222222",   // for borders or text on white

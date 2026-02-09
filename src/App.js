@@ -20,6 +20,7 @@ import { Costs, BuildToCost } from "./utils/constants";
 import GameOverPopUp from "./ui/GameOverPopUp";
 import boardBg from './assets/waterbg3.jpeg';
 import { PLAYER_UI_COLORS } from "./utils/playerUIColorMap";
+import { BOARD, BOARD_LAYOUT, EDGES, PORTS, TILES, VERTICES } from "./utils/offlineBoardInput";
 
 
 const socket = io(process.env.REACT_APP_BACKEND_URL);
@@ -52,6 +53,8 @@ function App() {
   );
   const playerActionDisplayTime = gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ACTION && isMyTurn && !gameState.robber?.mustBePlaced;
   const pairedPlayerActionDisplayTime = gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.PAIRED_PLAYER_ACTION && isMyPairedTurn && !gameState.robber?.mustBePlaced;
+
+  // const [pan, setPan] = React.useState({ x: 0, y: 0 });
 
   const [inTradingInterface, setInTradingInterface] = useState(false);
 
@@ -149,6 +152,23 @@ function App() {
 
 
 
+
+
+  const [connected, setConnected] = useState(false);
+
+  useEffect(() => {
+    socket.on("connect", () => setConnected(true));
+    socket.on("disconnect", () => setConnected(false));
+
+    return () => {
+      socket.off("connect");
+      socket.off("disconnect");
+    };
+  }, []);
+
+
+
+
   return (
     <div style={{ background: "#524f4f", height: "100vh" }}>
 
@@ -167,6 +187,12 @@ function App() {
             overflowY: "auto",   // 👈 THIS is the key
           }}
         >
+          {/* {connected && (
+            <div style={{ color: "white "}} >is connected</div>
+          )}
+          {!connected && (
+            <div style={{ color: "white "}} >no connect?</div>
+          )} */}
 
 
           {/* ===== LEFT PANEL ===== */}
@@ -192,6 +218,11 @@ function App() {
               onSetDevCards={(useExpansion) => socket.emit("setDevCards", useExpansion)}
               onSetRobberMax={(robberMaxCards) => socket.emit("setRobberMaxCards", robberMaxCards)}
               robberMaxCardsValue={gameState.robberMaxCards}
+              onSetVictoryPointsNeeded={(victoryPointsNeeded) => socket.emit("setVictoryPointsNeeded", victoryPointsNeeded)}
+              victoryPointsNeededValue={gameState.victoryPointsNeeded}
+              disconnectEveryone={() => socket.emit("disconnectAllPlayers")}
+
+              connected={connected}
             />
           )}
 
@@ -210,22 +241,24 @@ function App() {
             />
           )}
 
-          <GameInfo
-            turnOrder={gameState.turnOrder || []}
-            players={gameState.players || {}}
-            currentPlayerId={gameState.turn}
-            myPlayerId={playerId}
-            hostId={gameState.hostId}
-            lastRoll={gameState.lastRoll || {}}
-            bankResources={gameState.bankResources}
-            rollTime={gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ROLL && isMyTurn}
-            rollDice={() => socket.emit("rollDice")}
-            phase={gameState.phase}
-            turnPhase={gameState.turnPhase}
-            pairedPlayerId={gameState.pairedPlayerId}
-            onExitToLobby={() => socket.emit("exitToLobby")}
-            isHost={isHost}
-          ></GameInfo>
+          {connected && (
+            <GameInfo
+              turnOrder={gameState.turnOrder || []}
+              players={gameState.players || {}}
+              currentPlayerId={gameState.turn}
+              myPlayerId={playerId}
+              hostId={gameState.hostId}
+              lastRoll={gameState.lastRoll || {}}
+              bankResources={gameState.bankResources}
+              rollTime={gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ROLL && isMyTurn}
+              rollDice={() => socket.emit("rollDice")}
+              phase={gameState.phase}
+              turnPhase={gameState.turnPhase}
+              pairedPlayerId={gameState.pairedPlayerId}
+              onExitToLobby={() => socket.emit("exitToLobby")}
+              isHost={isHost}
+            ></GameInfo>
+          )}
 
           {/* {gameState.phase === Phase.IN_GAME && gameState.turnPhase === TurnPhase.ACTION && isMyTurn && !gameState.robber?.mustBePlaced && ( */}
           {(playerActionDisplayTime || pairedPlayerActionDisplayTime) && (
@@ -269,7 +302,7 @@ function App() {
           ref={boardRef}
           style={{
             flex: 2,
-            maxWidth: '60%',
+            maxWidth: connected ? '60%' : '80%',
             overflow: 'hidden',
             backgroundColor: "#212063",
             backgroundImage: `url(${boardBg})`,
@@ -289,8 +322,30 @@ function App() {
           >
             {/* HexBoard stays in the normal flow */}
             {/* <div style={{ position: "relative", zIndex: 1 }}> */}
+
+            {!connected && (
+              <HexBoard
+                boardLayout={BOARD_LAYOUT}
+                tiles={TILES}
+                vertices={VERTICES}
+                edges={EDGES}
+                ports={PORTS}
+                scale={0.6}
+                gameState={{
+                  phase: Phase.LOBBY,
+                  turn: null,
+                  setupStep: null,
+                  players: {},
+                  devCardRoadBuildingFirstRoadPlaced: false,
+                }}
+                buildMode={null}
+                myPlayerId={null}
+              />
+            )}
+
             <HexBoard
               boardLayout={gameState.boardLayout || []}
+              // boardLayout={BOARD_LAYOUT}
               tiles={gameState.tiles || []}
               vertices={gameState.vertices || []}
               edges={gameState.edges || []}
@@ -339,6 +394,9 @@ function App() {
                 socket.emit("placeRobber", { tileId: id })
               }}
               isMyPairedTurn={isMyPairedTurn}
+              // pan={pan}
+              // setPan={setPan}
+              // resetPan={resetPan}
               debug={debug}
             />
 
@@ -541,127 +599,145 @@ function App() {
           </div>
         </div>
 
-        <div
-          style={{
-            flex: 2,
-            maxWidth: "20%",
-            borderLeft: `4px solid ${theme.colors.lightAccent}`,
-            background: theme.colors.panelBackground,
-
-            display: "flex",
-            flexDirection: "column",
-            height: "100vh",
-          }}
-        >
-          {/* ===== RIGHT PANEL ===== */}
-
+        {connected && (
           <div
             style={{
-              flex: 1,             // takes remaining space
-              overflowY: "auto",   // scrolls if content is tall
-              paddingRight: 4,
-              border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
-              borderRadius: theme.styling.defaultRadius,
-              padding: theme.styling.componentPadding,
-              margin: theme.styling.componentMargin,
-              backgroundColor: theme.colors.componentBackground,
+              flex: 2,
+              maxWidth: "20%",
+              borderLeft: `4px solid ${theme.colors.lightAccent}`,
+              background: theme.colors.panelBackground,
+
+              display: "flex",
+              flexDirection: "column",
+              height: "100vh",
             }}
           >
-            {gameState.turnLogs?.map((turn) => (
-              <div style={{
+            {/* ===== RIGHT PANEL ===== */}
+
+            <div
+              style={{
+                flex: 1,             // takes remaining space
+                overflowY: "auto",   // scrolls if content is tall
+                paddingRight: 4,
                 border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
                 borderRadius: theme.styling.defaultRadius,
                 padding: theme.styling.componentPadding,
                 margin: theme.styling.componentMargin,
+                backgroundColor: theme.colors.componentBackground,
+              }}
+            >
+              {gameState.turnLogs?.map((turn) => (
+                <div style={{
+                  border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
+                  borderRadius: theme.styling.defaultRadius,
+                  padding: theme.styling.componentPadding,
+                  margin: theme.styling.componentMargin,
 
-                background: PLAYER_UI_COLORS[gameState.players[turn.playerId].color].bgColor,
-                borderColor: PLAYER_UI_COLORS[gameState.players[turn.playerId].color].borderColor,
+                  background: PLAYER_UI_COLORS[gameState.players[turn.playerId].color].bgColor,
+                  borderColor: PLAYER_UI_COLORS[gameState.players[turn.playerId].color].borderColor,
 
-              }}>
-                {/* Top row: Turn number (left) and Roll (right) */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    fontSize: "18px", // same font size for turn + roll
-                    fontWeight: "500",
-                    marginBottom: "4px", // small gap to player name below
-                  }}
-                >
-                  <span>Turn {turn.turn}</span>
-                  {turn.roll && <span>Roll: {turn.roll}</span>}
-                </div>
+                }}>
+                  {/* Top row: Turn number (left) and Roll (right) */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      fontSize: "18px", // same font size for turn + roll
+                      fontWeight: "500",
+                      marginBottom: "4px", // small gap to player name below
+                    }}
+                  >
+                    <span>Turn {turn.turn}</span>
+                    {turn.roll && <span>Roll: {turn.roll}</span>}
+                  </div>
 
-                {/* Player name below */}
-                <div
-                  style={{
-                    fontSize: "22px", // slightly larger
-                    fontWeight: "600",
-                  }}
-                >
-                  {turn.displayName}
-                </div>
+                  {/* Player name below */}
+                  <div
+                    style={{
+                      fontSize: "22px", // slightly larger
+                      fontWeight: "600",
+                    }}
+                  >
+                    {turn.displayName}
+                  </div>
 
-                {/* Display all actions */}
-                <div
-                  style={{
-                    // paddingLeft: "16px",
-                    // marginTop: "4px",
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {turn.actions && turn.actions.length > 0 && (
-                    <div style={{ marginTop: 4 }}>
-                      {/* <strong>Actions:</strong> */}
-                      <div style={{ paddingLeft: "16px", marginTop: "4px" }}>
-                        {turn.actions.map((action, i) => (
-                          <div key={i}>{action}</div>
-                        ))}
+                  {/* Display all actions */}
+                  <div
+                    style={{
+                      // paddingLeft: "16px",
+                      // marginTop: "4px",
+                      whiteSpace: "pre-wrap",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    {turn.actions && turn.actions.length > 0 && (
+                      <div style={{ marginTop: 4 }}>
+                        {/* <strong>Actions:</strong> */}
+                        <div style={{ paddingLeft: "16px", marginTop: "4px" }}>
+                          {turn.actions.map((action, i) => (
+                            <div key={i}>{action}</div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+
+
                 </div>
+                // </li>
+              ))}
 
+              {/* 👇 invisible anchor */}
+              <div ref={bottomRef} />
+              {/* </div> */}
+              {/* </ul> */}
+            </div>
+            <div
+              style={{
+                color: theme.colors.lightAccent,
+                paddingRight: 4,
+                border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
+                borderRadius: theme.styling.defaultRadius,
+                margin: theme.styling.componentMargin,
+                backgroundColor: theme.colors.componentBackground,
 
-              </div>
-              // </li>
-            ))}
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+              }}
+            >
+              <h3>Board Scale: {Math.round(boardScale * 100)}%</h3>
+              <input
+                type="range"
+                min="0.5"
+                max="1.5"
+                step="0.01"
+                value={boardScale}
+                onChange={(e) => setBoardScale(parseFloat(e.target.value))}
+              />
+              <div style={{ marginBottom: "10px" }}>{Math.round(boardScale * 100)}%</div>
 
-            {/* 👇 invisible anchor */}
-            <div ref={bottomRef} />
-            {/* </div> */}
-            {/* </ul> */}
+              {/* <button
+              onClick={() => {
+                setPan({ x: 0, y: 0 });
+                // 👇 THIS IS THE CRITICAL PART
+                // tell inertia to stop pulling back
+                if (boardRef.current?.resetTargetPan) {
+                  boardRef.current.resetTargetPan();
+                }
+              }}
+            >
+              Center Board
+            </button> */}
+
+            </div>
+
           </div>
-          <div
-            style={{
-              color: theme.colors.lightAccent,
-              paddingRight: 4,
-              border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
-              borderRadius: theme.styling.defaultRadius,
-              margin: theme.styling.componentMargin,
-              backgroundColor: theme.colors.componentBackground,
 
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              textAlign: "center",
-            }}
-          >
-            <h3>Board Scale</h3>
-            <input
-              type="range"
-              min="0.5"
-              max="1.5"
-              step="0.01"
-              value={boardScale}
-              onChange={(e) => setBoardScale(parseFloat(e.target.value))}
-            />
-            <div style={{ marginBottom: "10px" }}>{Math.round(boardScale * 100)}%</div>
-          </div>
+        )}
 
-        </div>
       </div>
 
     </div >
