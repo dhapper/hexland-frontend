@@ -1,20 +1,37 @@
 {
   "files": {
     "main.css": "/hexland-frontend/static/css/main.e6c13ad2.css",
-    "main.js": "/hexland-frontend/static/js/main.9cabf7a5.js",
+    "main.js": "/hexland-frontend/static/js/main.bca3c1dd.js",
     "static/js/453.20359781.chunk.js": "/hexland-frontend/static/js/453.20359781.chunk.js",
-    "static/media/wood-pile.svg": "/hexland-frontend/static/media/wood-pile.f136ff23d4f95f6cfee0e53d1fdb9b71.svg",
-    "static/media/wheat.svg": "/hexland-frontend/static/media/wheat.5aa3a6775da3888683a5e4ff7b543a47.svg",
-    "static/media/sheep.svg": "/hexland-frontend/static/media/sheep.f178284647b5d9be2beb1b6893cc8c57.svg",
-    "static/media/brick-pile.svg": "/hexland-frontend/static/media/brick-pile.1f2615f3a8d0857c39c645f49d51111b.svg",
-    "static/media/stone-pile.svg": "/hexland-frontend/static/media/stone-pile.64b112b47b8acce52f895a1530ee6f6d.svg",
+    "static/media/waterbg3.jpeg": "/hexland-frontend/static/media/waterbg3.9fcfd1ac632db9ea8c2a.jpeg",
+    "static/media/wood.jpg": "/hexland-frontend/static/media/wood.6ba9086ec19ec493d4cd.jpg",
+    "static/media/sheep.jpg": "/hexland-frontend/static/media/sheep.6f82faa83c3a10c5ff22.jpg",
+    "static/media/wheat.jpg": "/hexland-frontend/static/media/wheat.e9e8f029f5e0a48310c6.jpg",
+    "static/media/desert.jpg": "/hexland-frontend/static/media/desert.890f01f79cac26234073.jpg",
+    "static/media/brick.jpg": "/hexland-frontend/static/media/brick.06ef533190c9121466dc.jpg",
+    "static/media/vecteezy_wood.jpg": "/hexland-frontend/static/media/vecteezy_wood.3da66d9d1b46a4e5bc40.jpg",
+    "static/media/waves.svg": "/hexland-frontend/static/media/waves.ccef42d4cbe8f4f4758419125bedab8d.svg",
+    "static/media/ore.jpg": "/hexland-frontend/static/media/ore.0da1d641be06631a375b.jpg",
+    "static/media/portbg.jpg": "/hexland-frontend/static/media/portbg.fad1483d2394ee669424.jpg",
+    "static/media/ship2.svg": "/hexland-frontend/static/media/ship2.bdbd1b6e85918bab27d3bbd135dda12b.svg",
+    "static/media/wood-pile.svg": "/hexland-frontend/static/media/wood-pile.cb5cec16051cd5b8827738d94e6b5d5f.svg",
+    "static/media/wheat.svg": "/hexland-frontend/static/media/wheat.9a26d3c99d4626a94457ba8f82900191.svg",
+    "static/media/sheep.svg": "/hexland-frontend/static/media/sheep.502a6f50e03a9ce4627c330f2b9c99d7.svg",
+    "static/media/brick-pile.svg": "/hexland-frontend/static/media/brick-pile.ba8d3a3a2ed24774baeebf00269a3d1d.svg",
+    "static/media/monopoly.svg": "/hexland-frontend/static/media/monopoly.a9e3e3e9c623c929c9b1cfdce3e3503d.svg",
+    "static/media/inventor.svg": "/hexland-frontend/static/media/inventor.d5218a5e4573c322c76530d761aeb7e4.svg",
+    "static/media/stone-pile.svg": "/hexland-frontend/static/media/stone-pile.2c0feb15b53f0c58c7352c01b9874f7e.svg",
+    "static/media/victory-point.svg": "/hexland-frontend/static/media/victory-point.cccfa7df24539af3e71032220a3dc204.svg",
+    "static/media/knight.svg": "/hexland-frontend/static/media/knight.557f0fc4486dcb4b9330dd6698b15c75.svg",
     "index.html": "/hexland-frontend/index.html",
+    "static/media/pawn.svg": "/hexland-frontend/static/media/pawn.db1a34f08e44d3cbb278012c8e75e7fe.svg",
+    "static/media/road.svg": "/hexland-frontend/static/media/road.b0d75f961bba2f53281afd3d096da557.svg",
     "main.e6c13ad2.css.map": "/hexland-frontend/static/css/main.e6c13ad2.css.map",
-    "main.9cabf7a5.js.map": "/hexland-frontend/static/js/main.9cabf7a5.js.map",
+    "main.bca3c1dd.js.map": "/hexland-frontend/static/js/main.bca3c1dd.js.map",
     "453.20359781.chunk.js.map": "/hexland-frontend/static/js/453.20359781.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.9cabf7a5.js"
+    "static/js/main.bca3c1dd.js"
   ]
 }
