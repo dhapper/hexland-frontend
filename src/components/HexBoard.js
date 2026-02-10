@@ -29,6 +29,9 @@ export default function HexBoard({
   robber,
   placeRobber,
   isMyPairedTurn,
+  externalPanRef,
+  repositioned,
+  setRepositioned,
   debug
 }) {
   // ---------------- CONFIG ----------------
@@ -185,6 +188,10 @@ export default function HexBoard({
     targetPan.current.y -= dy;
 
     dragStart.current = { x: e.clientX, y: e.clientY };
+
+    if (!repositioned) {
+      setRepositioned(true); // mark board as dragged
+    }
   };
 
   const handleMouseUp = () => setDragging(false);
@@ -204,6 +211,21 @@ export default function HexBoard({
     animate();
     return () => cancelAnimationFrame(animationFrame);
   }, []);
+
+  // Expose pan controls to parent via externalPanRef
+  React.useEffect(() => {
+    if (externalPanRef) {
+      externalPanRef.current = {
+        setPan: ({ x, y }) => {
+          targetPan.current = { x, y };  // update target pan only
+          // remove direct setPan for smooth animation
+        },
+        getPan: () => pan
+      };
+
+    }
+  }, [externalPanRef, pan]);
+
 
 
   if (!bounds) return null;

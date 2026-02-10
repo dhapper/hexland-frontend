@@ -21,6 +21,8 @@ import GameOverPopUp from "./ui/GameOverPopUp";
 import boardBg from './assets/waterbg3.jpeg';
 import { PLAYER_UI_COLORS } from "./utils/playerUIColorMap";
 import { BOARD, BOARD_LAYOUT, EDGES, PORTS, TILES, VERTICES } from "./utils/offlineBoardInput";
+import DefaultTextButton from "./ui/DefaultTextButton";
+import ControlPanel from "./ui/ControlPanel";
 
 
 const socket = io(process.env.REACT_APP_BACKEND_URL);
@@ -87,10 +89,7 @@ function App() {
     return null;
   })();
 
-
-
   const boardRef = useRef(null);
-
 
   // 1️⃣ Persistent ID setup
   useEffect(() => {
@@ -150,10 +149,6 @@ function App() {
     });
   }, [gameState.turnLogs]);
 
-
-
-
-
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
@@ -166,6 +161,12 @@ function App() {
     };
   }, []);
 
+
+
+
+  // PANNING
+  const hexPanRef = useRef(null);
+  const [repositioned, setRepositioned] = React.useState(false);
 
 
 
@@ -223,6 +224,16 @@ function App() {
               disconnectEveryone={() => socket.emit("disconnectAllPlayers")}
 
               connected={connected}
+            />
+          )}
+
+          {!connected && (
+            <ControlPanel
+              boardScale={boardScale}
+              setBoardScale={setBoardScale}
+              hexPanRef={hexPanRef}
+              repositioned={repositioned}
+              setRepositioned={setRepositioned}
             />
           )}
 
@@ -323,80 +334,58 @@ function App() {
             {/* HexBoard stays in the normal flow */}
             {/* <div style={{ position: "relative", zIndex: 1 }}> */}
 
-            {!connected && (
-              <HexBoard
-                boardLayout={BOARD_LAYOUT}
-                tiles={TILES}
-                vertices={VERTICES}
-                edges={EDGES}
-                ports={PORTS}
-                scale={0.6}
-                gameState={{
-                  phase: Phase.LOBBY,
-                  turn: null,
-                  setupStep: null,
-                  players: {},
-                  devCardRoadBuildingFirstRoadPlaced: false,
-                }}
-                buildMode={null}
-                myPlayerId={null}
-              />
-            )}
-
             <HexBoard
-              boardLayout={gameState.boardLayout || []}
-              // boardLayout={BOARD_LAYOUT}
-              tiles={gameState.tiles || []}
-              vertices={gameState.vertices || []}
-              edges={gameState.edges || []}
-              ports={gameState.ports || []}
-              players={gameState.players || {}}
-              currentPlayerId={gameState.turn}
-              myPlayerId={playerId}
-              onPlaceRoad={(edgeKey) => {
-                // Only allow if buildIntent is ROAD (prevents extra clicks)
-                if (buildIntent !== BuildTypes.ROAD && gameState.turnPhase === TurnPhase.ACTION) return;
+              boardLayout={connected ? gameState.boardLayout || [] : BOARD_LAYOUT}
+              tiles={connected ? gameState.tiles || [] : TILES}
+              vertices={connected ? gameState.vertices || [] : VERTICES}
+              edges={connected ? gameState.edges || [] : EDGES}
+              ports={connected ? gameState.ports || [] : PORTS}
+              players={connected ? gameState.players || {} : {}}
+              currentPlayerId={connected ? gameState.turn : null}
+              myPlayerId={connected ? playerId : null}
+              onPlaceRoad={
+                connected
+                  ? (edgeKey) => {
+                    if (buildIntent !== BuildTypes.ROAD && gameState.turnPhase === TurnPhase.ACTION) return;
 
-                socket.emit("placeRoad", { edgeKey });
+                    socket.emit("placeRoad", { edgeKey });
 
-                if (gameState.turnPhase === DevCard.ROAD_BUILDING) {
-                  // First road placed, allow second
-                  if (!gameState.devCardRoadBuildingFirstRoadPlaced) {
-                    setBuildIntent(BuildTypes.ROAD); // still ROAD
-                  } else {
-                    setBuildIntent(null); // second road done
+                    if (gameState.turnPhase === DevCard.ROAD_BUILDING) {
+                      if (!gameState.devCardRoadBuildingFirstRoadPlaced) {
+                        setBuildIntent(BuildTypes.ROAD);
+                      } else {
+                        setBuildIntent(null);
+                      }
+                    } else if (gameState.turnPhase === TurnPhase.ACTION) {
+                      setBuildIntent(null);
+                    }
                   }
-                } else if (gameState.turnPhase === TurnPhase.ACTION) {
-                  // Normal turn, always reset after one
-                  setBuildIntent(null);
-                }
-              }}
-              onPlaceHouse={(vertexKey) => {
+                  : undefined
+              }
+              onPlaceHouse={connected ? (vertexKey) => {
                 socket.emit("placeHouse", { vertexKey });
-                if (gameState.turnPhase === TurnPhase.ACTION) {
-                  setBuildIntent(null);
-                }
-              }}
-              onPlaceCity={(vertexKey) => {
+                if (gameState.turnPhase === TurnPhase.ACTION) setBuildIntent(null);
+              } : undefined}
+              onPlaceCity={connected ? (vertexKey) => {
                 socket.emit("placeCity", { vertexKey });
-                if (gameState.turnPhase === TurnPhase.ACTION) {
-                  setBuildIntent(null);
-                }
-              }}
-
+                if (gameState.turnPhase === TurnPhase.ACTION) setBuildIntent(null);
+              } : undefined}
               scale={boardScale}
-              gameState={gameState}
-              socket={socket}
-              buildMode={buildMode}
-              robber={gameState.robber}
-              placeRobber={(id) => {
-                console.log("pressed")
-                socket.emit("placeRobber", { tileId: id })
+              gameState={connected ? gameState : {
+                phase: Phase.LOBBY,
+                turn: null,
+                setupStep: null,
+                players: {},
+                devCardRoadBuildingFirstRoadPlaced: false,
               }}
-              isMyPairedTurn={isMyPairedTurn}
-              // pan={pan}
-              // setPan={setPan}
-              // resetPan={resetPan}
+              socket={connected ? socket : undefined}
+              buildMode={buildMode}
+              robber={connected ? gameState.robber : undefined}
+              placeRobber={connected ? (id) => socket.emit("placeRobber", { tileId: id }) : undefined}
+              isMyPairedTurn={connected ? isMyPairedTurn : undefined}
+              externalPanRef={hexPanRef}
+              repositioned={repositioned}
+              setRepositioned={setRepositioned}
               debug={debug}
             />
 
@@ -693,46 +682,29 @@ function App() {
               {/* </div> */}
               {/* </ul> */}
             </div>
+
             <div
               style={{
                 color: theme.colors.lightAccent,
-                paddingRight: 4,
+                padding: 10,
                 border: `${theme.styling.defaultBorder} ${theme.colors.lightAccent}`,
                 borderRadius: theme.styling.defaultRadius,
                 margin: theme.styling.componentMargin,
                 backgroundColor: theme.colors.componentBackground,
-
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
               }}
             >
-              <h3>Board Scale: {Math.round(boardScale * 100)}%</h3>
-              <input
-                type="range"
-                min="0.5"
-                max="1.5"
-                step="0.01"
-                value={boardScale}
-                onChange={(e) => setBoardScale(parseFloat(e.target.value))}
-              />
-              <div style={{ marginBottom: "10px" }}>{Math.round(boardScale * 100)}%</div>
-
-              {/* <button
-              onClick={() => {
-                setPan({ x: 0, y: 0 });
-                // 👇 THIS IS THE CRITICAL PART
-                // tell inertia to stop pulling back
-                if (boardRef.current?.resetTargetPan) {
-                  boardRef.current.resetTargetPan();
-                }
-              }}
-            >
-              Center Board
-            </button> */}
-
+              <div><strong>Victory Points Needed:</strong> {gameState.victoryPointsNeeded}</div>
+              <div><strong>Robber Safety Card Count:</strong> {gameState.robberMaxCards}</div>
             </div>
+
+            <ControlPanel
+              boardScale={boardScale}
+              setBoardScale={setBoardScale}
+              hexPanRef={hexPanRef}
+              repositioned={repositioned}
+              setRepositioned={setRepositioned}
+            />
+
 
           </div>
 
