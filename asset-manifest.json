@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/hexland-frontend/static/css/main.e6c13ad2.css",
-    "main.js": "/hexland-frontend/static/js/main.bca3c1dd.js",
+    "main.js": "/hexland-frontend/static/js/main.dbb7bf8e.js",
     "static/js/453.20359781.chunk.js": "/hexland-frontend/static/js/453.20359781.chunk.js",
     "static/media/waterbg3.jpeg": "/hexland-frontend/static/media/waterbg3.9fcfd1ac632db9ea8c2a.jpeg",
     "static/media/wood.jpg": "/hexland-frontend/static/media/wood.6ba9086ec19ec493d4cd.jpg",
@@ -27,11 +27,11 @@
     "static/media/pawn.svg": "/hexland-frontend/static/media/pawn.db1a34f08e44d3cbb278012c8e75e7fe.svg",
     "static/media/road.svg": "/hexland-frontend/static/media/road.b0d75f961bba2f53281afd3d096da557.svg",
     "main.e6c13ad2.css.map": "/hexland-frontend/static/css/main.e6c13ad2.css.map",
-    "main.bca3c1dd.js.map": "/hexland-frontend/static/js/main.bca3c1dd.js.map",
+    "main.dbb7bf8e.js.map": "/hexland-frontend/static/js/main.dbb7bf8e.js.map",
     "453.20359781.chunk.js.map": "/hexland-frontend/static/js/453.20359781.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.e6c13ad2.css",
-    "static/js/main.bca3c1dd.js"
+    "static/js/main.dbb7bf8e.js"
   ]
 }
